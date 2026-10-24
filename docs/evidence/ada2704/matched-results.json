@@ -1,0 +1,88 @@
+{
+  "target": {
+    "gpu": "NVIDIA GeForce RTX 4080",
+    "pci_id": "10de:2704",
+    "vram_note": "modified 32 GiB configuration; driver reported 32760 MiB"
+  },
+  "software": {
+    "guest_os": "Ubuntu 24.04",
+    "kernel": "6.8.0-147-generic",
+    "nvidia_driver": "580.178.04",
+    "torch": "2.11.0+cu130",
+    "model": "Qwen 27B EXL3 6.0 bpw",
+    "runtime": "ExLlamaV3 1.6.2"
+  },
+  "application_prefill": {
+    "measurement": "native server prompt timings",
+    "boot_pairs": 1,
+    "warmups_per_size": 1,
+    "measured_repeats_per_size": 3,
+    "same_prompt_sha256_before_after": true,
+    "cached_tokens_zero_for_all_requests": true,
+    "requests_per_state": 12,
+    "power_limit_w": 320,
+    "clocks_locked": false,
+    "samples": [
+      {
+        "prompt_tokens": 4096,
+        "before_tokens_per_s": [1785.58952, 1785.58952, 1793.42105],
+        "after_tokens_per_s": [2140.83770, 2152.10526, 2129.68750],
+        "median_tokens_per_s_before": 1785.58952,
+        "median_tokens_per_s_after": 2140.83770,
+        "change_percent": 19.89529,
+        "median_prompt_seconds_before": 2.29,
+        "median_prompt_seconds_after": 1.91
+      },
+      {
+        "prompt_tokens": 16384,
+        "before_tokens_per_s": [1649.24471, 1629.55224, 1623.09217],
+        "after_tokens_per_s": [2002.07824, 2029.36803, 1999.63370],
+        "median_tokens_per_s_before": 1629.55224,
+        "median_tokens_per_s_after": 2002.07824,
+        "change_percent": 22.86064,
+        "median_prompt_seconds_before": 10.05,
+        "median_prompt_seconds_after": 8.18
+      },
+      {
+        "prompt_tokens": 65536,
+        "before_tokens_per_s": [1286.64834, 1284.37868, 1282.87001],
+        "after_tokens_per_s": [1628.45427, 1631.69821, 1630.48022],
+        "median_tokens_per_s_before": 1284.37868,
+        "median_tokens_per_s_after": 1630.48022,
+        "change_percent": 26.94700,
+        "median_prompt_seconds_before": 51.02,
+        "median_prompt_seconds_after": 40.19
+      }
+    ]
+  },
+  "cuda_numerics": {
+    "shape": "2048x2048",
+    "accumulation": "FP32",
+    "fp16": {
+      "full_output_sha256_before": "5811c59d3a1dce77e5445e13e72fd5443cb1215329728f74d2a65fc5e5699672",
+      "full_output_sha256_after": "5811c59d3a1dce77e5445e13e72fd5443cb1215329728f74d2a65fc5e5699672",
+      "relative_frobenius_error_fp64": 0.000358759615892496,
+      "median_ms_before": 0.219289588928223,
+      "median_ms_after": 0.115443205833435
+    },
+    "bf16": {
+      "full_output_sha256_before": "635f99fe0eda972b01c1b7da047451e8dc599f491dfffa389e9000ad4743392d",
+      "full_output_sha256_after": "635f99fe0eda972b01c1b7da047451e8dc599f491dfffa389e9000ad4743392d",
+      "relative_frobenius_error_fp64": 0.00286997216258041,
+      "median_ms_before": 0.219340801239014,
+      "median_ms_after": 0.115455996990204
+    }
+  },
+  "health": {
+    "gpu_unlock_success": true,
+    "post_load_and_benchmark_xid_errors": false,
+    "service_ready": true,
+    "nodes_ready": 6,
+    "deployment_and_configuration_preserved": true
+  },
+  "limitations": [
+    "One RTX 4080 with modified 32 GiB VRAM configuration",
+    "One stock/unlocked boot pair; repeatability across separate boots was not tested",
+    "Application performance results apply only to this workload and setup"
+  ]
+}
