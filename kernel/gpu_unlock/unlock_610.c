@@ -73,7 +73,8 @@ static const struct gpu_unlock_assets *unlock_assets(const struct pci_dev *pdev)
 	};
 
 	return (pdev->device == GU_AD102_RTX_4090 ||
-		pdev->device == GU_AD103_RTX_4070_TI_SUPER) ? &ad102 : &ga102;
+		pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
+		pdev->device == GU_AD106_RTX_4060_TI_16GB) ? &ad102 : &ga102;
 }
 
 /* The two falcons this module ever touches. SEC2 is the secure boot engine
@@ -314,10 +315,11 @@ static bool inaccessible(u32 value)
 
 static bool is_ad102(const struct unlock_transaction_work *work)
 {
-	/* AD103 uses the same pinned AD102-family Booter archive. Hardware
-	 * behavior on 0x2705 still requires an exact-card canary. */
+	/* AD103 and AD106 use the same pinned AD102-family Booter archive.
+	 * 0x2705 has one exact-card canary; 0x2805 is untested on silicon. */
 	return work->pdev->device == GU_AD102_RTX_4090 ||
-	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER;
+	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
+	       work->pdev->device == GU_AD106_RTX_4060_TI_16GB;
 }
 
 static const struct {
