@@ -51,6 +51,9 @@ The module selects the AD102 firmware and payload automatically for RTX 4090
 are retained, along with the newer GA103/GA106 device list. Upstream reported
 RTX 3090 success; this branch does not revalidate every legacy board.
 
+RTX 4090 D (`10de:2685`) uses the AD102 path with the experimental opt-in
+`gpu_unlock.rtx4090d_experimental=1`. Select cards with `gpu_unlock.targets=`.
+
 The Ada port additionally recognizes RTX 4070 Ti SUPER
 `10de:2705` as an **experimental AD103 target validated on one card**. It requires both
 `gpu_unlock.ad103_experimental=1` and `gpu_unlock.targets=` set to that card's

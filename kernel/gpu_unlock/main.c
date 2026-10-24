@@ -16,6 +16,10 @@ static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
 MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
 
+static bool rtx4090d_experimental;
+module_param(rtx4090d_experimental, bool, 0444);
+MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
+
 /* RTX 4090 and supported desktop GA102/GA103/GA104/GA106 GPU functions.
  * Professional parts already have full FP32-accumulate tensor issue rate.
  */
@@ -47,6 +51,8 @@ static bool supported(const struct pci_dev *pdev)
 
 	if (pdev->device == GU_AD103_RTX_4070_TI_SUPER)
 		return ad103_experimental;
+	if (pdev->device == GU_AD102_RTX_4090_D)
+		return rtx4090d_experimental;
 	for (i = 0; i < ARRAY_SIZE(supported_ids); i++)
 		if (pdev->device == supported_ids[i])
 			return true;

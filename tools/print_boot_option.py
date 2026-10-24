@@ -10,7 +10,7 @@ def candidates(lspci_output: str) -> list[tuple[str, str]]:
     found = []
     for line in lspci_output.splitlines():
         address = re.match(r"^([0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7])\s", line)
-        device = re.search(r"\[10de:(2684|2705)\]", line, re.I)
+        device = re.search(r"\[10de:(2684|2685|2705)\]", line, re.I)
         if address and device:
             found.append((address.group(1).lower(), device.group(1).lower()))
     return found
@@ -25,12 +25,15 @@ def main() -> int:
         return 1
     found = candidates(result.stdout)
     if not found:
-        print("No supported RTX 4090 (10de:2684) or experimental RTX 4070 Ti SUPER "
-              "(10de:2705) was found.", file=sys.stderr)
+        print("No supported RTX 4090 (10de:2684), experimental RTX 4090 D "
+              "(10de:2685) or RTX 4070 Ti SUPER (10de:2705) was found.", file=sys.stderr)
         return 2
     for address, device in found:
         options = f"gpu_unlock.targets={address}"
         label = "RTX 4090" if device == "2684" else "RTX 4070 Ti SUPER (experimental)"
+        if device == "2685":
+            label = "RTX 4090 D (experimental)"
+            options += " gpu_unlock.rtx4090d_experimental=1"
         if device == "2705":
             options += " gpu_unlock.ad103_experimental=1"
         print(f"{label} at {address} [10de:{device}]:")
