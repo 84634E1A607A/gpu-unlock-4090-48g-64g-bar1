@@ -96,4 +96,14 @@ void pci_clear_master(struct pci_dev *);
 int pcie_flr(struct pci_dev *);
 struct pci_dev *pci_dev_get(struct pci_dev *);
 void pci_dev_put(struct pci_dev *);
+#define module_param(name, type, perm)
+#define MODULE_PARM_DESC(name, desc)
+#define PCI_EXT_CAP_ID_REBAR 0x15
+#define PCI_REBAR_CAP 4
+#define PCI_REBAR_CTRL 8
+#define PCI_REBAR_CAP_SIZES 0x00fffff0
+#define PCI_REBAR_CTRL_BAR_IDX 7
+#define PCI_REBAR_CTRL_NBAR_MASK 0xe0
+#define PCI_REBAR_CTRL_NBAR_SHIFT 5
+int pci_find_ext_capability(struct pci_dev *,int);
 #endif

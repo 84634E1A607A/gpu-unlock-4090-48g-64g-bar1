@@ -9,6 +9,7 @@ static const struct firmware payload_fw = { sizeof(payload), payload };
 
 static void ad102_setup(struct unlock_transaction_work *w)
 {
+    bar1_64g=false; /* Original four-PLM regression profile. */
     setup(w);
     dev.device=GU_AD102_RTX_4090;
     regs[0]=0x192000a1;

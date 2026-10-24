@@ -47,8 +47,18 @@
     "sha256": "44c36b2d6b3424e53e18f3e55db85c833655de071ce66ce42749588a4a7dc8cb",
     "source": "TOTORONG/AD103_win_unlocker source/firmware-tools/ad102_payload.py",
     "source_revision": "51df9c17ec89eb8486df52cc9079dde4bd1f9974",
-    "external_hardware_evidence": ["RTX 4080 AD103 10de:2704", "RTX 4090 AD102 10de:2684"],
+    "external_hardware_evidence": [
+      "RTX 4080 AD103 10de:2704",
+      "RTX 4090 AD102 10de:2684"
+    ],
     "target_10de_2705_hardware_verified": true,
     "target_10de_2705_evidence": "docs/ada-2705-report.md"
+  },
+  "bar1_payload": {
+    "filename": "v67-ad102-610.43.03-bar1-64g.bin",
+    "sha256": "cf3566d0887d3d31e8cb3611bf0a1b3fafcd9584ea7a73306f75f8d0eafb1284",
+    "base_payload_sha256": "44c36b2d6b3424e53e18f3e55db85c833655de071ce66ce42749588a4a7dc8cb",
+    "hardware_verified": true,
+    "evidence": "docs/bar1-64g-report.md"
   }
 }

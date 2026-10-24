@@ -13,7 +13,8 @@ class FirmwarePinTests(unittest.TestCase):
         manifest = json.loads((ROOT / "firmware/artifacts-610.43.03.json").read_text())
         expected = dict(manifest["derived_assets"])
         expected["gsp_ga10x.bin"] = manifest["source_artifacts"][2]["firmware"][0]["sha256"]
-        for key in ("generated_payload", "generated_ad102_payload"):
+        for key in ("generated_payload", "generated_ad102_payload",
+                    "generated_ad102_bar1_payload"):
             entry = manifest[key]
             expected[entry["filename"]] = entry["sha256"]
         source = (ROOT / "kernel/gpu_unlock/firmware_pins_610.h").read_text()

@@ -28,6 +28,7 @@ static struct {
     int fwsec_wpr;u32 fwsec_wpr_lo,fwsec_wpr_hi; /* WPR2 that FWSEC-FRTS enables */
     int apertures,regions;
     int ad_mode;
+    int bar1_payload,bar1_mode;
     char log[32768];
 } fake;
 void *kzalloc(size_t n,int flags) {
@@ -119,9 +120,9 @@ u32 readl(const void *p) {
 void writel(u32 v,void *p) {
     if(full_active && fake_ada_id()) {
         assert(last_work->permission_saved);
-        assert(last_work->permission_before[0]==0x0004cb8f);
-        assert(last_work->permission_before[1]==0xffffff0f);
-        assert(last_work->permission_before[2]==0x0004cb8f);
+        assert(last_work->permission_before[0]==(last_work->bar1_64g?0x28:0x0004cb8f));
+        assert(last_work->permission_before[1]==(last_work->bar1_64g?0x80000009:0xffffff0f));
+        assert(last_work->permission_before[2]==(last_work->bar1_64g?0xffffff8f:0x0004cb8f));
         assert(last_work->permission_before[3]==0xffffff8f);
     }
     fake.writes++;
@@ -155,10 +156,19 @@ void writel(u32 v,void *p) {
         if(fake.boot_mode==2)regs[(SEC2_BASE+0x100)/4]=~0u;
         if(fake.boot_mode==3)regs[(SEC2_BASE+0x100)/4]=0x10;
         if(fake_ada_id()) {
-            regs[0x1fa7cc/4]=fake.ad_mode==4?~0u:0xfffff0ff;
-            regs[0x9a0148/4]=fake.ad_mode==6?0xffffff0f:~0u;
-            regs[0x1fa7c4/4]=fake.ad_mode==5?0x0004cb8f:~0u;
+            if(!fake.bar1_payload) {
+                regs[0x1fa7cc/4]=fake.ad_mode==4?~0u:0xfffff0ff;
+                regs[0x9a0148/4]=fake.ad_mode==6?0xffffff0f:~0u;
+                regs[0x1fa7c4/4]=fake.ad_mode==5?0x0004cb8f:~0u;
+            }
             regs[(SEC2_BASE+0x40)/4]=fake.ad_mode==1?0:fake.ad_mode==2?0x67b00002:GU_AD102_MARKER;
+            if(fake.bar1_payload) {
+                regs[GU_XVE_CYA/4]=fake.bar1_mode==2?0x28:0x30;
+                regs[GU_XVE_CFG/4]=fake.bar1_mode==3?0x80000009:0x8000000a;
+                regs[GU_XVE_PLM/4]=fake.bar1_mode==1?0xffffff8f:~0u;
+                regs[GU_XVE_BAR1_CAP/4]=fake.bar1_mode==4?0xffc00:0x1ffc00;
+                regs[(SEC2_BASE+0x40)/4]=fake.bar1_mode==9?GU_AD102_MARKER:GU_AD102_BAR1_MARKER;
+            }
             regs[(SEC2_BASE+0x100)/4]=fake.ad_mode==10?0:0x10;
             if(fake.ad_mode==3)regs[GU_FEAT_PLM_OFFSET/4]=0xffffff8f;
             if(fake.ad_mode==11)regs[0x1fa7cc/4]=0xbadf5040;
@@ -224,7 +234,14 @@ void release_firmware(const struct firmware *f) {if(f){free((void *)f->data);fre
 void __module_get(void *p) {fake.pins++;}
 int pci_read_config_word(struct pci_dev *p,int r,u16 *v) {*v=r==PCI_COMMAND?fake.cmd:r==PCI_VENDOR_ID?0x10de:0;return 0;}
 int pci_read_config_dword(struct pci_dev *p,int r,u32 *v) {
+    if(r==0xbb8){*v=0x460;return 0;}
+    if(r==0xbc0){*v=0xf01;return 0;}
+    if(r==0xbc8){*v=0x403;return 0;}
+    if(r==0xbbc){*v=fake.bar1_mode==5?0xffc00:regs[GU_XVE_BAR1_CAP/4];return 0;}
     *v=r==PCI_VENDOR_ID?(fake.flrs && fake.lost_identity?~0u:(u32)p->device<<16|p->vendor):(u32)fake.bar_bad;return 0;
+}
+int pci_find_ext_capability(struct pci_dev *p,int cap) {
+    assert(cap==PCI_EXT_CAP_ID_REBAR);return fake.bar1_mode==8?0:0xbb0;
 }
 int pci_write_config_word(struct pci_dev *p,int r,u16 v) {assert(r==PCI_COMMAND);fake.cmd=v|(fake.master_stuck?4:0);return 0;}
 int pcie_capability_read_word(struct pci_dev *p,int r,u16 *v) {*v=r==PCI_EXP_DEVSTA?fake.pending:0;return 0;}
@@ -272,6 +289,11 @@ int pcie_flr(struct pci_dev *p) {
     if(fake.corrupt_selector==2)regs[GU_FEAT_SS1_OFFSET/4]=0;
     if(fake.ad_mode==8)regs[GU_FEAT_READOUT_1_OFFSET/4]=1u<<24;
     if(fake.ad_mode==16)regs[GU_FEAT_PLM_OFFSET/4]=0xffffff8f;
+    if(fake.bar1_payload && (fake.bar1_mode==6 || fake.bar1_mode==7)) {
+        regs[GU_XVE_CYA/4]=0x28;regs[GU_XVE_CFG/4]=0x80000009;
+        regs[GU_XVE_BAR1_CAP/4]=0xffc00;
+        if(fake.bar1_mode==7)regs[GU_XVE_PLM/4]=0xffffff8f;
+    }
     if(fake.alien_wpr){regs[0x1fa824/4]=0x1000;regs[0x1fa828/4]=0x2000;}
     if(fake.wpr_after==1)regs[0x1fa824/4]=regs[0x1fa828/4]=0;
     if(fake.wpr_after==2){regs[0x1fa824/4]=0x2000;regs[0x1fa828/4]=0x1000;}

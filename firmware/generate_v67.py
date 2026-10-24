@@ -17,6 +17,8 @@ GSP_SHA256 = "572373620a37418f24dc16b5031c39338778c3257e48e8408de9a57291b24f3a"
 PAYLOAD_SHA256 = "2a0aa1f86d0b6afff5214d641d87d46dc98ef06ed908ff05d0ddbad5ffb7e197"
 AD102_PAYLOAD_SHA256 = "44c36b2d6b3424e53e18f3e55db85c833655de071ce66ce42749588a4a7dc8cb"
 AD102_PAYLOAD_NAME = "v67-ad102-610.43.03-four-plm.bin"
+AD102_BAR1_PAYLOAD_NAME = "v67-ad102-610.43.03-bar1-64g.bin"
+AD102_BAR1_PAYLOAD_SHA256 = "cf3566d0887d3d31e8cb3611bf0a1b3fafcd9584ea7a73306f75f8d0eafb1284"
 PACKAGE_VERSION = "610.43.03-1"
 FIRMWARE_PREFIX = "usr/lib/firmware/nvidia/610.43.03/"
 MANIFEST = Path(__file__).with_name("artifacts-610.43.03.json")
@@ -131,6 +133,18 @@ def build_ad102_payload() -> bytes:
     return _build_payload(AD102_PATCHED_WORDS)
 
 
+def build_ad102_bar1_payload() -> bytes:
+    """Write CYA/CFG at SEC2 L3, open XVE/FEAT, retain stack and cleanup."""
+    words = dict(AD102_PATCHED_WORDS)
+    words[0xF948] = 0x00000030
+    words[0xF960] = 0x00088724
+    words[0xF974] = 0x8000000A
+    words[0xF984] = 0x00088DCC
+    words[0xF9A8] = 0x00088FF4
+    words[0xF9E0] = 0x67B00004
+    return _build_payload(words)
+
+
 def _build_payload(patched_words: dict[int, int]) -> bytes:
     word = FILL_DWORD.to_bytes(4, "little")
     payload = bytearray(word * (PAYLOAD_SIZE // len(word)))
@@ -166,6 +180,9 @@ def main() -> int:
     ad102_payload = build_ad102_payload()
     if sha256(ad102_payload) != AD102_PAYLOAD_SHA256:
         raise SystemExit("generated AD102 V67 image differs from its pinned SHA-256")
+    bar1_payload = build_ad102_bar1_payload()
+    if sha256(bar1_payload) != AD102_BAR1_PAYLOAD_SHA256:
+        raise SystemExit("generated AD102 BAR1 V67 image differs from its pinned SHA-256")
     manifest = json.loads(MANIFEST.read_text())
     notice = manifest["source_artifacts"][2]["notice"]
     license_text = extract_member(args.package, notice["path"])
@@ -175,6 +192,7 @@ def main() -> int:
     (args.output / "gsp_ga10x.bin").write_bytes(gsp)
     (args.output / "v67-ga102-610.43.03.bin").write_bytes(payload)
     (args.output / AD102_PAYLOAD_NAME).write_bytes(ad102_payload)
+    (args.output / AD102_BAR1_PAYLOAD_NAME).write_bytes(bar1_payload)
     (args.output / "NVIDIA-LICENSE").write_bytes(license_text)
     return 0
 

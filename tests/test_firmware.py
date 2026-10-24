@@ -35,6 +35,26 @@ class FirmwareTests(unittest.TestCase):
             self.assertEqual(struct.unpack_from("<I", payload, offset)[0],
                              overrides.get(offset, 0x19c), hex(offset))
 
+    def test_bar1_payload_retains_stack_and_cleanup(self):
+        original = generate_v67.build_ad102_payload()
+        payload = generate_v67.build_ad102_bar1_payload()
+        entry = self.manifest["generated_ad102_bar1_payload"]
+        self.assertEqual(len(payload), 0xfa00)
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), entry["sha256"])
+        self.assertEqual(entry["sha256"], generate_v67.AD102_BAR1_PAYLOAD_SHA256)
+        changed = [offset for offset in range(0, len(payload), 4)
+                   if original[offset:offset+4] != payload[offset:offset+4]]
+        self.assertEqual(changed, [0xf948, 0xf960, 0xf974, 0xf984, 0xf9a8, 0xf9e0])
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf948)[0], 0x30)
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf960)[0], 0x88724)
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf984)[0], 0x88dcc)
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf974)[0], 0x8000000a)
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf9a8)[0], 0x88ff4)
+        self.assertEqual(struct.unpack_from("<I", payload, 0xf9e0)[0], 0x67b00004)
+        for word in entry["overrides"]:
+            self.assertEqual(struct.unpack_from("<I", payload, int(word["offset"], 0))[0],
+                             int(word["value"], 0))
+
     def test_ad102_ordered_arguments_marker_and_cleanup(self):
         payload = generate_v67.build_ad102_payload()
         entry = self.manifest["generated_ad102_payload"]
@@ -87,13 +107,14 @@ class FirmwareTests(unittest.TestCase):
         payloads = {
             "v67-ga102-610.43.03.bin": generate_v67.build_payload(),
             "v67-ad102-610.43.03-four-plm.bin": generate_v67.build_ad102_payload(),
+            generate_v67.AD102_BAR1_PAYLOAD_NAME: generate_v67.build_ad102_bar1_payload(),
         }
         with tempfile.TemporaryDirectory() as directory:
             assets = Path(directory) / "assets"
             destination = Path(directory) / "install"
             assets.mkdir()
             expected = set(self.manifest["derived_assets"]) | {"gsp_ga10x.bin"} | set(payloads)
-            self.assertEqual(len(expected), 9)
+            self.assertEqual(len(expected), 10)
             for filename in expected:
                 (assets / filename).write_bytes(payloads.get(filename, b"fixture"))
             (assets / "NVIDIA-LICENSE").write_text("fixture license\n")

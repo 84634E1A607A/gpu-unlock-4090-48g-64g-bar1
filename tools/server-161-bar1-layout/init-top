@@ -1,0 +1,38 @@
+#!/bin/sh
+case "$1" in prereqs) exit 0;; esac
+log() { printf '<6>gpu_unlock eight: %s\n' "$*" > /dev/kmsg; }
+for b in 9a 9b 9c 9e cc ce cf d0; do
+  d=/sys/bus/pci/devices/0000:$b:00.0
+  if [ ! -d "$d" ] || [ -L "$d/driver" ] || [ "$(cat "$d/device")" != 0x2684 ]; then
+    log "preflight failed at $b; not starting"
+    exit 0
+  fi
+done
+for b in 9a 9b 9c 9e cc ce cf d0; do
+  printf 'gpu-unlock-early\n' > /sys/bus/pci/devices/0000:$b:00.0/driver_override
+done
+log 'SEC2 unlock before udev'
+if ! modprobe -v gpu_unlock; then log 'unlock load failed; keep GPUs unbound'; exit 0; fi
+if [ "$(dmesg | grep -c 'gpu_unlock: unlocked')" -ne 8 ]; then
+  log 'not all eight unlock transactions passed; keep GPUs unbound'
+  exit 0
+fi
+for root in 0x97 0xc9; do
+  if ! modprobe -v bar1_layout root_bus=$root; then
+    log "layout failed for $root; keep GPUs unbound"
+    exit 0
+  fi
+  if ! rmmod bar1_layout; then log 'layout unload failed; keep GPUs unbound'; exit 0; fi
+done
+for b in 9a 9b 9c 9e cc ce cf d0; do
+  d=/sys/bus/pci/devices/0000:$b:00.0
+  set -- $(sed -n '2p' "$d/resource")
+  if [ "$(( $2 - $1 + 1 ))" -ne 68719476736 ]; then
+    log "64 GiB assignment failed at $b; keep GPUs unbound"
+    exit 0
+  fi
+done
+log 'all eight BAR1 resources are 64 GiB; releasing NVIDIA handoff'
+for b in 9a 9b 9c 9e cc ce cf d0; do
+  printf '\n' > /sys/bus/pci/devices/0000:$b:00.0/driver_override
+done

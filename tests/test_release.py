@@ -25,6 +25,7 @@ CASES = {
     "vbios_610": ["vbios_610.c"],
     "unlock_adapter": ["gfw_eval.c", "prep_610.c", "layout_610.c", "vbios_610.c"],
     "ad102_kernel": ["gfw_eval.c", "prep_610.c", "layout_610.c", "vbios_610.c"],
+    "bar1_kernel": ["gfw_eval.c", "prep_610.c", "layout_610.c", "vbios_610.c"],
     "main": [],
     "bench_helpers": [],
 }
@@ -32,6 +33,7 @@ CASES = {
 SHIMS = {
     "unlock_adapter": ["-I", str(ROOT / "tests/unlock_shim")],
     "ad102_kernel": ["-I", str(ROOT / "tests/unlock_shim")],
+    "bar1_kernel": ["-I", str(ROOT / "tests/unlock_shim")],
     # The kernel build does not warn on sign-compare; match it for main.c.
     "main": ["-I", str(ROOT / "tests/main_shim"), "-pthread", "-Wno-sign-compare"],
 }
@@ -76,7 +78,8 @@ class PinnedTransactionTests(unittest.TestCase):
         manifest = json.loads((ROOT / "firmware/artifacts-610.43.03.json").read_text())
         pins = dict(manifest["derived_assets"])
         pins["gsp_ga10x.bin"] = manifest["source_artifacts"][2]["firmware"][0]["sha256"]
-        for key in ("generated_payload", "generated_ad102_payload"):
+        for key in ("generated_payload", "generated_ad102_payload",
+                    "generated_ad102_bar1_payload"):
             entry = manifest[key]
             pins[entry["filename"]] = entry["sha256"]
         for name, expected in pins.items():
@@ -90,6 +93,9 @@ class PinnedTransactionTests(unittest.TestCase):
 
     def test_ad102_full_transactions(self):
         ComponentTests.run_component(self, "ad102_kernel", ("-", str(ASSETS)))
+
+    def test_bar1_full_transactions(self):
+        ComponentTests.run_component(self, "bar1_kernel", ("-", str(ASSETS)))
 
     def test_shared_gsp_sections(self):
         ComponentTests.run_component(self, "prep_610", (str(ASSETS),))

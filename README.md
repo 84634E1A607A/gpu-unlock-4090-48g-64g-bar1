@@ -199,6 +199,14 @@ addresses. Every experimental Ada target requires its own flag from the
 be named by their exact PCI address; `all` never selects them. Invalid entries
 are logged and ignored.
 
+Selected RTX 4090 cards open a maximum 64 GiB BAR1 by default.
+`gpu_unlock.bar1_64g=0` selects the original tensor-only payload. Other GPU IDs
+keep their existing payload. The BAR1 variant writes CYA/CFG through the existing
+SEC2 chain, opens XVE and FEAT, and verifies the capability before and after FLR.
+A 64 GiB capability alone does not mean Linux assigned a 64 GiB BAR: bridge
+windows must also accommodate it. See the [BAR1 report](docs/bar1-64g-report.md)
+for measured results and the separate topology-specific resource-layout helper.
+
 The packages support these initramfs generators:
 
 - **mkinitcpio:** `/etc/mkinitcpio.conf.d/zz-gpu-unlock.conf` puts `gpu_unlock`
@@ -217,7 +225,8 @@ soft dependency line, which can conflict with other packages.
 needs a card whose firmware state is fresh before NVIDIA loads. A warm reboot
 is not guaranteed to provide that state: it did on the tested
 RTX 4070 Ti SUPER, where the pre-firmware WPR2 readback returned to zero and
-the unlock succeeded again without an AC cut. Other boards may retain WPR2;
+the unlock succeeded again without an AC cut. The tested eight-card RTX 4090 system also passed an ordinary reboot from the persistent 64 GiB BAR1
+default; see the [BAR1 report](docs/bar1-64g-report.md). Other boards may retain WPR2;
 the module refuses to rerun the firmware sequence in that state. It also skips
 cards that are already bound or powered down. If board firmware left bus
 mastering enabled, the module clears it and verifies that it stayed cleared;

@@ -6,17 +6,25 @@ module source archive and the exact CachyOS `nvidia-utils` package pinned in
 SHA-256 before they enter the cache; cached files are rechecked on every run.
 Nothing downloaded is executed or installed.
 
-`make firmware` then builds the nine files the kernel module loads from
+`make firmware` then builds the ten files the kernel module loads from
 `gpu-unlock/610.43.03/`:
 
 - `generate_v67.py` extracts `gsp_ga10x.bin` and the NVIDIA license from the
   package and generates the 64,000-byte `v67-ga102-610.43.03.bin` and
-  `v67-ad102-610.43.03-four-plm.bin` payloads.
+  `v67-ad102-610.43.03-four-plm.bin` payloads, plus the independent
+  `v67-ad102-610.43.03-bar1-64g.bin` variant for selected RTX 4090s.
 - `extract_boot_assets.py` builds `booter_load_ga102.bin`,
   `gsp_boot_ga102.bin` and `gsp_boot_desc_ga102.bin`, plus their three AD102
   equivalents, from the source archive.
 
-The AD102 payload reproduces the four-write chain pinned in the
+The RTX 4090 BAR1 variant uses the same stack and cleanup with four writes:
+CYA `0x88724 = 0x30`, CFG `0x88dcc = 0x8000000a`, XVE PLM
+`0x88ff4 = 0xffffffff`, and FEAT PLM `0x823804 = 0xffffffff`.
+Its marker is `0x67b00004`; its independent hash is pinned in the manifest.
+The host verifies those readbacks and the standard ReBAR capability, then runs
+the existing FLR and cleanup. It does not repeat Booter or try host CYA/CFG writes.
+
+The original AD102 payload reproduces the four-write chain pinned in the
 manifest at SHA-256 `44c36b2d6b3424e53e18f3e55db85c833655de071ce66ce42749588a4a7dc8cb`.
 Its ordered targets are WPR_CFG, FBPA, WPR and FEAT_OVR_PLM; the first value is
 `0xfffff0ff`, and the other three are `0xffffffff`. It then requests mailbox0

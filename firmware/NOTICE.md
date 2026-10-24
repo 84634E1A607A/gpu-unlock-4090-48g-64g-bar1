@@ -55,3 +55,9 @@ follow those source contracts; `licenses/NVIDIA-MIT.txt` preserves the notice.
 The inspected EFI reference's notice is in `licenses/CMP40HX-MIT.txt`.
 The reference's CMP 90HX result is distinct from this fork's measured RTX 4090
 result; each project retains its own attribution and evidence.
+
+Modified on 2026-10-24: the independent RTX 4090 BAR1 variant reuses the
+AD102 chain's four existing writes for CYA (0x00088724 = 0x30), CFG
+(0x00088dcc = 0x8000000a), XVE PLM (0x00088ff4 = 0xffffffff) and FEAT PLM
+(0x00823804 = 0xffffffff). Its marker is 0x67b00004. Stack geometry and
+cleanup remain byte-identical. This local modification is GPL-2.0-only.

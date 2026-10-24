@@ -30,12 +30,19 @@
 #define GU_SS0_UNLOCK 0x88888888u
 #define GU_SS1_UNLOCK 0x8u
 #define GU_AD102_MARKER 0x67b00001u
+#define GU_AD102_BAR1_MARKER 0x67b00004u
+#define GU_XVE_PLM 0x00088ff4u
+#define GU_XVE_CYA 0x00088724u
+#define GU_XVE_CFG 0x00088dccu
+#define GU_XVE_BAR1_CAP 0x00088bbcu
+#define GU_BAR1_64G_BIT (1u << 16)
 #define GU_SPEED_READOUT_MASK 0x07ffffffu /* nine 3-bit fields */
 #define BOOTER_MAGIC 0x314c5442u
 #define BOOTER_FILE_GA102 "gpu-unlock/610.43.03/booter_load_ga102.bin"
 #define BOOTER_FILE_AD102 "gpu-unlock/610.43.03/booter_load_ad102.bin"
 #define V67_FILE_GA102 "gpu-unlock/610.43.03/v67-ga102-610.43.03.bin"
 #define V67_FILE_AD102 "gpu-unlock/610.43.03/v67-ad102-610.43.03-four-plm.bin"
+#define V67_FILE_AD102_BAR1 "gpu-unlock/610.43.03/v67-ad102-610.43.03-bar1-64g.bin"
 #define GSP_FILE "gpu-unlock/610.43.03/gsp_ga10x.bin"
 #define BOOT_FILE_GA102 "gpu-unlock/610.43.03/gsp_boot_ga102.bin"
 #define BOOT_FILE_AD102 "gpu-unlock/610.43.03/gsp_boot_ad102.bin"
@@ -44,6 +51,10 @@
 /* The GSP boot image is bounded only by the boot descriptor, which has to
  * describe its own size; this just keeps a bad asset from being huge. */
 #define BOOT_FILE_MAX (1u << 20)
+
+static bool bar1_64g = true;
+module_param(bar1_64g, bool, 0444);
+MODULE_PARM_DESC(bar1_64g, "Open up to 64 GiB BAR1 on selected RTX 4090 cards (default: on)");
 
 struct gpu_unlock_assets {
 	const char *booter;
@@ -125,6 +136,12 @@ struct unlock_transaction_page {
 	dma_addr_t dma;
 };
 
+struct ad102_permission {
+	const char *name;
+	u32 offset, expected;
+	bool required;
+};
+
 struct unlock_transaction_work {
 	struct pci_dev *pdev;
 	void __iomem *bar;
@@ -174,6 +191,7 @@ struct unlock_transaction_work {
 	u32 chip_entry;
 	u32 permission_before[4], permission_after[4];
 	bool permission_saved, permission_sampled, payload_verified;
+	bool bar1_64g, bar1_prepared;
 	bool sec2_started, sec2_halt_verified;
 	u32 bars[6];
 	void *fwsec_cpu;
@@ -374,16 +392,29 @@ static bool is_ad102(const struct unlock_transaction_work *work)
 	return ad102_family(work->pdev->device);
 }
 
-static const struct {
-	const char *name;
-	u32 offset, expected;
-	bool required;
-} ad102_permissions[] = {
+static const struct ad102_permission ad102_permissions[] = {
 	{ "WPR_CFG", 0x001fa7cc, 0xfffff0ff, true },
 	{ "FBPA", 0x009a0148, 0xffffffff, false },
 	{ "WPR", 0x001fa7c4, 0xffffffff, true },
 	{ "FEAT", GU_FEAT_PLM_OFFSET, 0xffffffff, true },
 };
+
+static const struct ad102_permission ad102_bar1_permissions[] = {
+	{ "CYA", GU_XVE_CYA, 0x30, true },
+	{ "CFG", GU_XVE_CFG, 0x8000000a, true },
+	{ "XVE", GU_XVE_PLM, 0xffffffff, true },
+	{ "FEAT", GU_FEAT_PLM_OFFSET, 0xffffffff, true },
+};
+
+static const struct ad102_permission *ad102_permission_table(const struct unlock_transaction_work *work)
+{
+	return work->bar1_64g ? ad102_bar1_permissions : ad102_permissions;
+}
+
+static u32 ad102_marker(const struct unlock_transaction_work *work)
+{
+	return work->bar1_64g ? GU_AD102_BAR1_MARKER : GU_AD102_MARKER;
+}
 
 /* A PLM may legitimately contain all ones. Independent PCI and BAR identity
  * checks distinguish that value from a generally inaccessible device. Log all
@@ -392,6 +423,7 @@ static const struct {
 static int ad102_sample_permissions(struct unlock_transaction_work *work,
 				     const char *phase, u32 values[4], bool before)
 {
+	const struct ad102_permission *permissions = ad102_permission_table(work);
 	u32 identity = 0, chip = 0;
 	unsigned int i;
 	bool accessible;
@@ -404,16 +436,17 @@ static int ad102_sample_permissions(struct unlock_transaction_work *work,
 	if (before && accessible)
 		work->chip_entry = chip;
 	for (i = 0; i < ARRAY_SIZE(ad102_permissions); i++) {
+		struct ad102_permission permission = permissions[i];
 		bool valid;
 
 		values[i] = 0;
-		valid = !read_bar(work, ad102_permissions[i].offset, &values[i]) &&
+		valid = !read_bar(work, permission.offset, &values[i]) &&
 			(values[i] & 0xffff0000u) != 0xbadf0000u && accessible;
 		dev_info(&work->pdev->dev,
 			 "AD102 permission %s: %s[%#x]=%#x before=%#x expected=%#x required=%u valid=%u pci=%#x chip=%#x\n",
-			 phase, ad102_permissions[i].name, ad102_permissions[i].offset,
-			 values[i], work->permission_before[i], ad102_permissions[i].expected,
-			 ad102_permissions[i].required, valid, identity, chip);
+			 phase, permission.name, permission.offset,
+			 values[i], work->permission_before[i], permission.expected,
+			 permission.required, valid, identity, chip);
 		if (!valid)
 			ret = -ENODEV;
 	}
@@ -681,7 +714,7 @@ static int falcon_hs(struct unlock_transaction_work *work, const struct falcon_e
 			/* Ada's explicit marker is independent evidence that all-ones PLM
 			 * is the payload result. Full permission and HALT checks follow. */
 			if (plm == ~0u && work->plm_entry != ~0u &&
-			    (!is_ad102(work) || marker == GU_AD102_MARKER))
+			    (!is_ad102(work) || marker == ad102_marker(work)))
 				return 0;
 			if ((engine & (1u << 4)) || ktime_compare(ktime_get(), deadline) >= 0)
 				log_falcon_failure(work, eng, identity, engine, plm);
@@ -875,7 +908,8 @@ static int unlock_transaction_assets(struct unlock_transaction_work *work)
 	ret = check_devres_empty(work, "entry");
 	if (ret)
 		return ret;
-	ret = request_asset(work, &work->v67_fw, unlock_assets(work->pdev)->payload);
+	ret = request_asset(work, &work->v67_fw, work->bar1_64g ?
+			    V67_FILE_AD102_BAR1 : unlock_assets(work->pdev)->payload);
 	if (ret)
 		return GU_RESULT(ret);
 	if (work->v67_fw->size != GU_V67_SIZE)
@@ -1326,6 +1360,10 @@ static int unlock_transaction_gfw(struct unlock_transaction_work *work)
 
 				if (ret)
 					return ret;
+				if (work->bar1_64g &&
+				    ((work->permission_before[0] & ~0x3fu) ||
+				     (work->permission_before[1] & ~0x8000000fu)))
+					return GU_RESULT(-EOPNOTSUPP);
 				work->permission_saved = true;
 				ret = ad102_readout(work, "before-firmware", false);
 				if (ret)
@@ -1343,6 +1381,7 @@ static int unlock_transaction_gfw(struct unlock_transaction_work *work)
 
 static int unlock_transaction_boot(struct unlock_transaction_work *work)
 {
+	const struct ad102_permission *permissions = ad102_permission_table(work);
 	const struct gpu_unlock_booter_hdr *h = &work->booter_hdr;
 	u32 marker = 0, cpuctl = 0, debug = 0, ss0 = 0, ss1 = 0;
 	unsigned int i;
@@ -1370,8 +1409,8 @@ static int unlock_transaction_boot(struct unlock_transaction_work *work)
 	work->permission_sampled = true;
 	sample_ret = ad102_sample_permissions(work, "after-payload", work->permission_after, false);
 	for (i = 0; i < ARRAY_SIZE(ad102_permissions); i++)
-		if (ad102_permissions[i].required &&
-		    work->permission_after[i] != ad102_permissions[i].expected)
+		if (permissions[i].required &&
+		    work->permission_after[i] != permissions[i].expected)
 			required = false;
 	/* These independently readable feature words reject a disconnected or
 	 * protected BAR view even when every sampled PLM happens to be all ones. */
@@ -1383,10 +1422,10 @@ static int unlock_transaction_boot(struct unlock_transaction_work *work)
 		state_ret = -ENODEV;
 	dev_info(&work->pdev->dev,
 		 "AD102 payload result: boot=%d halt=%d marker=%#x expected=%#x marker_ok=%u required_permissions=%u cpuctl=%#x halted=%u debug=%#x ss0=%#x ss1=%#x\n",
-		 ret, halt_ret, marker, GU_AD102_MARKER, marker == GU_AD102_MARKER,
+		 ret, halt_ret, marker, ad102_marker(work), marker == ad102_marker(work),
 		 required, cpuctl, work->sec2_halt_verified, debug, ss0, ss1);
 	if (ret || halt_ret || state_ret || sample_ret || !required ||
-	    marker != GU_AD102_MARKER || !work->sec2_halt_verified)
+	    marker != ad102_marker(work) || !work->sec2_halt_verified)
 		return GU_RESULT(ret ? ret : halt_ret ? halt_ret :
 				 state_ret ? -ENODEV : sample_ret ? sample_ret : -EIO);
 	work->payload_verified = true;
@@ -1445,6 +1484,85 @@ static int unlock_transaction_signature(struct unlock_transaction_work *work)
 	}
 	work->signature_calls++;
 	return 0;
+}
+
+struct bar1_state {
+	u32 cya, cfg, plm, sizes;
+};
+
+/* Find BAR1 by its standard ReBAR entry, not by a hard-coded PCI offset. */
+static int bar1_possible_sizes(struct unlock_transaction_work *work, u32 *sizes)
+{
+	int cap = pci_find_ext_capability(work->pdev, PCI_EXT_CAP_ID_REBAR);
+	u32 ctrl, value;
+	unsigned int i, count;
+
+	if (!cap || diag_pci_dword(work, false, cap + PCI_REBAR_CTRL, &ctrl) ||
+	    inaccessible(ctrl))
+		return GU_RESULT(-ENODEV);
+	count = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
+	if (!count || count > 6)
+		return GU_RESULT(-EBADMSG);
+	for (i = 0; i < count; i++) {
+		if (diag_pci_dword(work, false, cap + PCI_REBAR_CTRL + i * 8, &ctrl) ||
+		    inaccessible(ctrl))
+			return GU_RESULT(-ENODEV);
+		if ((ctrl & PCI_REBAR_CTRL_BAR_IDX) != 1)
+			continue;
+		if (diag_pci_dword(work, false, cap + PCI_REBAR_CAP + i * 8, &value) ||
+		    inaccessible(value))
+			return GU_RESULT(-ENODEV);
+		*sizes = (value & PCI_REBAR_CAP_SIZES) >> 4;
+		return 0;
+	}
+	return GU_RESULT(-ENODEV);
+}
+
+static int bar1_sample(struct unlock_transaction_work *work, const char *phase,
+		       struct bar1_state *state)
+{
+	u32 identity, chip, cap;
+	int ret;
+
+	if (diag_pci_dword(work, false, PCI_VENDOR_ID, &identity) ||
+	    identity != pci_identity(work->pdev) ||
+	    read_bar(work, 0, &chip) || chip != work->chip_entry ||
+	    read_bar(work, GU_XVE_PLM, &state->plm) ||
+	    (state->plm & 0xffff0000u) == 0xbadf0000u ||
+	    read_bar(work, GU_XVE_CYA, &state->cya) || inaccessible(state->cya) ||
+	    read_bar(work, GU_XVE_CFG, &state->cfg) || inaccessible(state->cfg) ||
+	    read_bar(work, GU_XVE_BAR1_CAP, &cap) || inaccessible(cap))
+		return GU_RESULT(-ENODEV);
+	ret = bar1_possible_sizes(work, &state->sizes);
+	if (ret)
+		return ret;
+	dev_info(&work->pdev->dev,
+		 "BAR1 %s: XVE_PLM=%#x CYA=%#x CFG=%#x raw_cap=%#x supported_sizes=%#x supports_64g=%u\n",
+		 phase, state->plm, state->cya, state->cfg, cap, state->sizes,
+		 !!(state->sizes & GU_BAR1_64G_BIT));
+	return GU_RESULT(((cap & PCI_REBAR_CAP_SIZES) >> 4) == state->sizes ? 0 : -EIO);
+}
+
+static bool bar1_target(const struct bar1_state *state)
+{
+	return (state->cya & 0x3f) == 0x30 &&
+	       (state->cfg & 0x8000000f) == 0x8000000a &&
+	       (state->sizes & GU_BAR1_64G_BIT);
+}
+
+/* SEC2 writes the private registers. The host only verifies capability;
+ * BAR placement and bridge windows remain the PCI allocator's responsibility. */
+static int unlock_transaction_bar1(struct unlock_transaction_work *work, bool after_flr)
+{
+	struct bar1_state state = { };
+	int ret;
+
+	if (!work->bar1_64g)
+		return 0;
+	if (!work->payload_verified || !work->sec2_halt_verified)
+		return GU_RESULT(-EPROTO);
+	ret = bar1_sample(work, after_flr ? "post-FLR" : "pre-FLR", &state);
+	return GU_RESULT(ret ? ret : bar1_target(&state) ? 0 : -EIO);
 }
 
 /* Write the unlock value to one speed selector and read it back. */
@@ -1722,7 +1840,10 @@ static int unlock_transaction_reset(struct unlock_transaction_work *work)
 			return ret;
 		if (plm != ~0u)
 			return GU_RESULT(-EIO);
-		return ad102_readout(work, "post-FLR", true);
+		ret = ad102_readout(work, "post-FLR", true);
+		if (!ret && work->bar1_prepared)
+			ret = unlock_transaction_bar1(work, true);
+		return ret;
 	}
 	return 0;
 }
@@ -1741,13 +1862,14 @@ void gpu_unlock_610_release_shared(struct gpu_unlock_610_shared *shared)
 int gpu_unlock_610_unlock(struct pci_dev *pdev, const struct gpu_unlock_610_shared *shared)
 {
 	struct unlock_transaction_work *work;
-	int ret, cleanup;
+	int ret, cleanup, bar1_ret;
 
 	work = kzalloc(sizeof(*work), GFP_KERNEL);
 	if (!work)
 		return -ENOMEM;
 	work->pdev = pci_dev_get(pdev);
 	work->gsp_fw = shared->gsp;
+	work->bar1_64g = bar1_64g && pdev->device == GU_AD102_RTX_4090;
 	ret = unlock_transaction_assets(work);
 	if (!ret)
 		ret = unlock_transaction_claim(work);
@@ -1767,8 +1889,14 @@ int gpu_unlock_610_unlock(struct pci_dev *pdev, const struct gpu_unlock_610_shar
 		ret = unlock_transaction_signature(work);	/* restore stock */
 	if (!ret)
 		ret = unlock_transaction_selector(work);
-	if (!ret)
+	if (!ret) {
+		bar1_ret = unlock_transaction_bar1(work, false);
+		work->bar1_prepared = work->bar1_64g && !bar1_ret;
+		/* A capability mismatch must still reach the containment FLR. */
 		ret = unlock_transaction_reset(work);
+		if (!ret)
+			ret = bar1_ret;
+	}
 	/* Restore the stock signature when SEC2 no longer consumes the metadata.
 	 * An unverified live engine retains the V67 page and all DMA buffers. */
 	if (ret && work->signature_calls == 1)
@@ -1794,6 +1922,7 @@ MODULE_FIRMWARE(BOOTER_FILE_GA102);
 MODULE_FIRMWARE(BOOTER_FILE_AD102);
 MODULE_FIRMWARE(V67_FILE_GA102);
 MODULE_FIRMWARE(V67_FILE_AD102);
+MODULE_FIRMWARE(V67_FILE_AD102_BAR1);
 MODULE_FIRMWARE(GSP_FILE);
 MODULE_FIRMWARE(BOOT_FILE_GA102);
 MODULE_FIRMWARE(BOOT_FILE_AD102);
