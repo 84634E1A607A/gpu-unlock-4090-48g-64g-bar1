@@ -10,11 +10,14 @@
 
 static char *targets;
 module_param(targets, charp, 0444);
-MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 requires an exact single address");
+MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 and AD106 require an exact single address");
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
 MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
+static bool ad106_experimental;
+module_param(ad106_experimental, bool, 0444);
+MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
 
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
@@ -53,6 +56,8 @@ static bool supported(const struct pci_dev *pdev)
 		return ad103_experimental;
 	if (pdev->device == GU_AD102_RTX_4090_D)
 		return rtx4090d_experimental;
+	if (pdev->device == GU_AD106_RTX_4060_TI_16GB)
+		return ad106_experimental;
 	for (i = 0; i < ARRAY_SIZE(supported_ids); i++)
 		if (pdev->device == supported_ids[i])
 			return true;
@@ -135,6 +140,11 @@ static int __init gpu_unlock_init(void)
 		if (pdev->device == GU_AD103_RTX_4070_TI_SUPER &&
 		    (all || strcasecmp(targets, pci_name(pdev)))) {
 			pci_err(pdev, "gpu_unlock: experimental AD103 requires a single exact PCI target\n");
+			continue;
+		}
+		if (pdev->device == GU_AD106_RTX_4060_TI_16GB &&
+		    (all || strcasecmp(targets, pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental AD106 requires a single exact PCI target\n");
 			continue;
 		}
 		if (!all && !listed(pci_name(pdev)))
