@@ -29,3 +29,6 @@
 # Keep published evidence bytes identical on Windows and Linux clones.
 /docs/evidence/ada2705/* -text
 /docs/evidence/rtx4090/* -text
+/docs/evidence/rtx4090-pr1-stock/* -text
+/docs/evidence/rtx4090-pr1-stock/gemm_bench.cu -export-ignore
+/docs/evidence/rtx4090-pr1-matched/* -text

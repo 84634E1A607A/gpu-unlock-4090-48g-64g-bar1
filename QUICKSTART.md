@@ -113,6 +113,12 @@ python3 tools/read_sm_rates.py --expect-uuid GPU-PASTE-YOUR-EXACT-UUID
 Get the UUID from `nvidia-smi --query-gpu=uuid --format=csv,noheader` after
 boot. Do not use a UUID from another card.
 
+For a stock/unlocked comparison, collect the stock measurements before enabling
+the test and use the same running kernel, driver, binaries and power cap in both
+states. Check `uname -r` and `/proc/cmdline`; a boot-menu title alone does not
+identify the kernel or prove that the test entry ran. The [testing guide](docs/testing.md)
+includes benchmark commands and the [matched RTX 4090 results](docs/evidence/rtx4090-pr1-matched/README.md).
+
 ## Keep it enabled across boots
 
 First test an ordinary reboot with the same early initramfs and exact target

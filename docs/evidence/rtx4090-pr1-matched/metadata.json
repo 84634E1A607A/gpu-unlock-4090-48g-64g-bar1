@@ -1,0 +1,117 @@
+{
+  "source_commit": "8855e7bca8ff142204e02301331fd56b26699819",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "device_id": "10de:2684",
+  "SMs": 128,
+  "compute_capability": "8.9",
+  "kernel": "7.2.11-arch1-1",
+  "driver": "615.78.08",
+  "CUDA_toolkit": "13.4.92",
+  "power_limit_W": 450,
+  "clock_policy": "Existing clock and power policy retained; no changes during these runs.",
+  "background": "GNOME desktop active; preflight detected no non-desktop compute processes.",
+  "pair_count": 1,
+  "timing_repetitions": 5,
+  "large_gemm_warmups": 10,
+  "large_gemm_iterations_per_timing": 20,
+  "module_sha256": "8c9f6ff8a9986e81796e417f72f035aafb4878857f3ba526900bebe421e0649a",
+  "firmware_sha256": {
+    "booter_load_ga102.bin": "056cbc064a888f80717726c54d7f64fcd68044d123870c95a74f37f4975dcaa4",
+    "gsp_boot_ga102.bin": "3df651acb174fd5f5561a1996965b192f50c5d763168446ed0d4ead19d895768",
+    "gsp_boot_desc_ga102.bin": "cc5a3fc1f4c47f2fe107b1b68f0176d8a448e6dec84b575e5560ccef5262bf15",
+    "booter_load_ad102.bin": "6ee05b20e1dc244c08c052f36ef28469b8d09f4955d1fe33e48a179e11a7fd49",
+    "gsp_boot_ad102.bin": "45d6335a8185d6ff13e8d1484cea73f68d3d13aa1c19dc080ed1c3482dd5bac0",
+    "gsp_boot_desc_ad102.bin": "83f8f3f1f5f9496e0ea8fc7103c2beb64d0b6de2f5ffe725f13514de5a95fa42",
+    "gsp_ga10x.bin": "572373620a37418f24dc16b5031c39338778c3257e48e8408de9a57291b24f3a",
+    "v67-ga102-610.43.03.bin": "2a0aa1f86d0b6afff5214d641d87d46dc98ef06ed908ff05d0ddbad5ffb7e197",
+    "v67-ad102-610.43.03-four-plm.bin": "44c36b2d6b3424e53e18f3e55db85c833655de071ce66ce42749588a4a7dc8cb"
+  },
+  "benchmark_hashes": {
+    "bin/gemm_bench": "24db45e2f7b618d032f22a88a53dfff8092a63476ba19622b99857778d7c5e3e",
+    "bin/mma_bench": "3b27ace8caedc65815fc6e3724c7af0b5b94530e8795bd5b1d588e74f1efe538",
+    "bin/read_sm_rates.py": "1e5ef78dfcbe8ce5960fd81c81eb1ede86f08babbb8715d7e40ac1e8f9329421",
+    "bin/tensor_modes_driver_runner.py": "1f5340454ddf4fc2310eec8694a3bdf84ec0abcfcf3aae980939d1840ff3305d",
+    "bin/tensor_modes_issue_sm89.cubin": "33aa6db385aa9eb8a1f73bb2f74891aea84794326b7c40992bc642f93a3c614d",
+    "bin/tensor_modes_issue_sm89.ptx": "d0adaf4bd42da19f60f3e1c623388aad5d290b3531f3f6f3bffca6bf86334ea8",
+    "bin/validate_gemm": "53600d5a831d1a9a8e44edd4590461a8ba81ecc117e0e3124c88bd271712a766",
+    "src/bench_args.h": "bd548217d69e262df0dc682b142bbda7f32fb6061fcdbe448fa3882ddfb13400",
+    "src/gemm_bench.cu": "c35ec706f9587b9749bf369a35d4dfca9e88c666c4582726490e0138cdd6e240",
+    "src/gemm_inputs.h": "c6005990cbc8ebc584e46ceca6b04a86213bd8399bb59bad3881a9c3b86a436d",
+    "src/mma_bench.cu": "49d4f1aa04b48c958766ce2c3764e3dbda8b9dfe5ae72a42d93efe480f639c5d",
+    "src/tensor_modes_issue.cu": "46cc852ec15ba2d12a259d7698e8fcd2104dfb07a5947a38d46c7bd6b5f5462f",
+    "src/validate_gemm.cu": "06071e4ae031aaf8b87a0abbd570211b226b68dadb723007e4fe2bdffa853992"
+  },
+  "phases": {
+    "stock": {
+      "started_utc": "20261024T163726Z",
+      "status": "passed",
+      "mma_Top_s": {
+        "f16/f16": 320.6,
+        "f16/f32": 160.4,
+        "bf16/f32": 159.7,
+        "s8/s32": 641.1,
+        "dp4a": 159.1,
+        "ffma": 76.4
+      },
+      "active_telemetry": {
+        "power.draw [W]": {
+          "min": 90.4,
+          "max": 307.67,
+          "mean": 167.22
+        },
+        "temperature.gpu": {
+          "min": 50.0,
+          "max": 68.0,
+          "mean": 55.142857142857146
+        },
+        "clocks.current.sm [MHz]": {
+          "min": 2655.0,
+          "max": 2670.0,
+          "mean": 2669.285714285714
+        }
+      },
+      "journal_returncode": 0
+    },
+    "unlocked": {
+      "started_utc": "20261024T164540Z",
+      "status": "passed",
+      "mma_Top_s": {
+        "f16/f16": 320.4,
+        "f16/f32": 320.4,
+        "bf16/f32": 320.2,
+        "s8/s32": 640.3,
+        "dp4a": 159.1,
+        "ffma": 76.3
+      },
+      "active_telemetry": {
+        "power.draw [W]": {
+          "min": 81.65,
+          "max": 308.59,
+          "mean": 203.1839393939394
+        },
+        "temperature.gpu": {
+          "min": 54.0,
+          "max": 73.0,
+          "mean": 60.878787878787875
+        },
+        "clocks.current.sm [MHz]": {
+          "min": 2610.0,
+          "max": 2670.0,
+          "mean": 2657.7272727272725
+        }
+      },
+      "journal_returncode": 0
+    }
+  },
+  "boot_evidence": "Selected-card gpu_unlock: unlocked message and full-rate RM getter after NVIDIA initialization. Isolated image used the reviewed module and pinned firmware; physical AC removal was not independently observed.",
+  "error_check": "No NVRM Xid lines observed in current-boot journal before or after unlocked benchmarks.",
+  "telemetry_time_zone": "Australia/Victoria, UTC+11 on the collection date; timestamps retained from nvidia-smi.",
+  "sanitization": "GPU UUID, actual PCI address, host name, boot IDs, root UUID and host paths omitted. Numeric outputs/timings preserved.",
+  "limits": [
+    "One matched stock/unlocked pair on one owner-controlled RTX 4090, with five internal timing repetitions per mode.",
+    "No extended stability or warm-reboot persistence test in this run.",
+    "Desktop activity, clocks and temperature are potential timing confounders.",
+    "Large-GEMM performance inputs have a cheap exact reference; seeded varied-matrix validation is separate.",
+    "No claim about whole applications, inference, training, lifetime reliability or maximum board power."
+  ]
+}

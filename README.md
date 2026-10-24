@@ -13,12 +13,20 @@ approximately **2× FP16 and BF16 tensor throughput with FP32 accumulation**:
 
 The override survived PCIe Function Level Reset (FLR), stock NVIDIA `615.78.08`
 initialization and CUDA benchmarks. INT8, `dp4a` and scalar FP32 stayed near their
-baseline rates. This is one tested RTX 4090 and one successful cold power-on;
-independent cold-boot reproduction and application numerical validation remain
-pending. The measured firmware transaction preceded the repository cleanup;
-the cleaned module has host-side validation and still needs that hardware repeat.
-See the [technical report](rtx4090-register-report.md) and
-[sanitized evidence](docs/evidence/rtx4090/README.md).
+baseline rates. The original transaction preceded the repository cleanup; see
+the [technical report](rtx4090-register-report.md) and
+[original evidence](docs/evidence/rtx4090/README.md).
+
+An independent owner run of revision `8855e7b` also completed the RTX 4090
+transaction and NVIDIA driver handoff on Linux `7.2.11-arch1-1`. Matched
+stock/unlocked measurements with NVIDIA `615.78.08` and the same 450 W cap
+found FP16/FP32 instruction throughput **160.4 → 320.4 TF/s** and BF16/FP32
+**159.7 → 320.2 TF/s**. All exercised numerical checks passed. Real cuBLAS
+GEMM median throughput varied by shape: FP16 gained 12–34%, BF16 gained
+16–20% at two shapes and was essentially unchanged at 4096³. These are one
+matched run pair with the desktop active, not whole-application speedups or
+an extended stability test. See the [matched evidence and limits](docs/evidence/rtx4090-pr1-matched/README.md)
+and [testing workflow](docs/testing.md).
 
 A separate cold test of the Ada port on one RTX 4070 Ti SUPER
 (`10de:2705`) with NVIDIA `580.178.04` measured FP16/FP32 tensor issue rate
@@ -146,7 +154,9 @@ is not guaranteed to provide that state: it did on the tested
 RTX 4070 Ti SUPER, where the pre-firmware WPR2 readback returned to zero and
 the unlock succeeded again without an AC cut. Other boards may retain WPR2;
 the module refuses to rerun the firmware sequence in that state. It also skips
-cards that are already bound, powered down or bus mastering.
+cards that are already bound or powered down. If board firmware left bus
+mastering enabled, the module clears it and verifies that it stayed cleared;
+the later WPR2 check still rejects an already initialized card.
 Loading the module manually after NVIDIA has bound the card cannot unlock it.
 
 After validating a cold boot and a one-time warm reboot on the exact card, a
@@ -195,10 +205,20 @@ fresh hardware state.
 
 ## Development and credits
 
-`make test` runs the host-side suite without accessing a GPU. With generated
-firmware available, it also exercises complete unlock transactions against mocked
-hardware. `make LLVM=1 -C kernel/gpu_unlock` builds the module with LLVM against
-the running kernel's headers.
+`make test` runs the host-side suite without accessing a GPU. Missing generated
+firmware is reported as an explicit skip of the full transaction tests. After
+`make assets`, use `make test-full` for a strict check that requires both the
+pinned source and all generated assets. Override `ASSETS=` and `NVIDIA_SOURCE=`
+for inputs built elsewhere. These tests mock firmware execution and device
+behavior; they do not replace a hardware repeat.
+See [testing and interpreting results](docs/testing.md) for the validation
+levels, matched benchmark commands and recorded hardware evidence.
+
+The kernel verifies each loaded asset against its pinned SHA-256 before claiming
+the card or starting firmware DMA, including files staged into an initramfs.
+The kernel's SHA-256 library (`CONFIG_CRYPTO_LIB_SHA256`) must be available.
+`make -C kernel/gpu_unlock` builds against the running kernel's headers; use
+`LLVM=1` when those headers support a Clang build.
 
 The Linux module and packaging derive from
 [Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock). The AD102 four-PLM

@@ -1,0 +1,61 @@
+{
+  "phase": "stock speed-select state",
+  "measurement_date_utc": "2026-10-24",
+  "source_commit": "8855e7bca8ff142204e02301331fd56b26699819",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "SMs": 128,
+  "compute_capability": "8.9",
+  "driver": "615.78.08",
+  "kernel": "6.18.57-2-lts",
+  "CUDA_toolkit": "13.4.92",
+  "power_limit_W": 450,
+  "clock_policy": "Existing policy retained; this session did not change clocks or power limits.",
+  "background": "GNOME desktop active; no non-desktop compute process detected by the preflight.",
+  "rates": {
+    "imla0": 0,
+    "fmla16": 0,
+    "dp": 0,
+    "fmla32": 1,
+    "ffma": 0,
+    "imla1": 0,
+    "imla2": 1,
+    "imla3": 0,
+    "imla4": 1
+  },
+  "active_telemetry": {
+    "power.draw [W]": {
+      "min": 99.13,
+      "max": 303.82,
+      "mean": 193.55093023255813
+    },
+    "temperature.gpu": {
+      "min": 61.0,
+      "max": 76.0,
+      "mean": 66.23255813953489
+    },
+    "clocks.current.sm [MHz]": {
+      "min": 2535.0,
+      "max": 2655.0,
+      "mean": 2646.6279069767443
+    }
+  },
+  "benchmark_hashes": {
+    "bin/gemm_bench": "24db45e2f7b618d032f22a88a53dfff8092a63476ba19622b99857778d7c5e3e",
+    "bin/mma_bench": "3b27ace8caedc65815fc6e3724c7af0b5b94530e8795bd5b1d588e74f1efe538",
+    "bin/tensor_modes_issue_sm89.cubin": "33aa6db385aa9eb8a1f73bb2f74891aea84794326b7c40992bc642f93a3c614d",
+    "bin/tensor_modes_issue_sm89.ptx": "d0adaf4bd42da19f60f3e1c623388aad5d290b3531f3f6f3bffca6bf86334ea8",
+    "bin/validate_gemm": "53600d5a831d1a9a8e44edd4590461a8ba81ecc117e0e3124c88bd271712a766",
+    "src/bench_args.h": "bd548217d69e262df0dc682b142bbda7f32fb6061fcdbe448fa3882ddfb13400",
+    "src/gemm_bench.cu": "c35ec706f9587b9749bf369a35d4dfca9e88c666c4582726490e0138cdd6e240",
+    "src/gemm_inputs.h": "c6005990cbc8ebc584e46ceca6b04a86213bd8399bb59bad3881a9c3b86a436d",
+    "src/mma_bench.cu": "49d4f1aa04b48c958766ce2c3764e3dbda8b9dfe5ae72a42d93efe480f639c5d",
+    "src/tensor_modes_issue.cu": "46cc852ec15ba2d12a259d7698e8fcd2104dfb07a5947a38d46c7bd6b5f5462f",
+    "src/validate_gemm.cu": "06071e4ae031aaf8b87a0abbd570211b226b68dadb723007e4fe2bdffa853992"
+  },
+  "limits": [
+    "Stock baseline only; no unlock module loaded.",
+    "No cross-boot speedup is claimed.",
+    "Desktop activity, temperature and clock variation are potential timing confounders.",
+    "Large-GEMM performance inputs have a simple exact reference; separate numerical validation uses seeded varied matrices."
+  ]
+}

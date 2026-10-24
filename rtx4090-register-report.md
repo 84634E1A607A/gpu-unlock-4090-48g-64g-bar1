@@ -1,5 +1,11 @@
 # RTX 4090 (AD102) speed-select unlock: experiment and results
 
+This is the original 2026-10-23 report. A subsequent independent owner run of
+reviewed revision `8855e7b` completed the module transaction and matched
+stock/unlocked numerical and GEMM tests; see the [2026-10-24 evidence](docs/evidence/rtx4090-pr1-matched/README.md).
+The pending-validation statements below describe the original report's scope
+at publication, not the status of that later run.
+
 **An RTX 4090 unlock was demonstrated on 2026-10-23. FP16 and BF16 tensor
 throughput with FP32 accumulation approximately doubled, and the override
 survived FLR, stock NVIDIA initialization and CUDA load.**
