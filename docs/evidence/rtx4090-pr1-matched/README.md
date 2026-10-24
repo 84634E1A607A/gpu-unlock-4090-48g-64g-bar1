@@ -93,11 +93,24 @@ approximately every 100 ms; these short samples do not establish maximum
 board power, long-term thermals or electrical safety.
 
 Desktop activity, temperature and clock variation can influence timing.
-There was no extended stability test, representative inference/training
-workload, or additional boot/persistence test in this run. The firmware's
-transaction checks passed, but physical AC removal was not independently
-observed. This result validates the exercised reviewed module path on this
-card/configuration; it does not validate every supported board or kernel.
+There was no extended stability test or representative inference/training
+workload in this run. A later ordinary warm reboot and unlocked rerun are
+documented separately in [warm-reboot-repeat](warm-reboot-repeat/README.md).
+That follow-up is one unlocked repeat against this same single stock baseline,
+not an additional matched pair. Physical AC removal was not independently
+observed. These results validate only the exercised reviewed module path on
+this card/configuration; they do not validate every supported board or kernel.
+
+## Warm-reboot repeat
+
+After an ordinary warm reboot, the isolated test image again reported
+`gpu_unlock: unlocked` before NVIDIA initialization. The post-driver selector
+readback remained full rate, and the second unlocked benchmark suite passed
+with zero seeded or GEMM output mismatches and no observed Xid errors. The
+FP16/FP32 and BF16/FP32 issue-rate probes remained near 2× versus the original
+stock run. Application GEMM results varied by shape: five of six medians were
+faster, while 4096³ BF16 was 8.2% slower. Full results, sanitized logs and
+checksums are in [warm-reboot-repeat](warm-reboot-repeat/README.md).
 
 ## Reproduce and verify
 

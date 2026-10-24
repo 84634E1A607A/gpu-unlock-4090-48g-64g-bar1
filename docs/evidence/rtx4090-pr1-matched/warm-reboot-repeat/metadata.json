@@ -1,0 +1,176 @@
+{
+  "run": "second unlocked measurement after an ordinary warm reboot; no AC removal",
+  "started_utc": "2026-10-24T17:38:22Z",
+  "source_commit": "8855e7bca8ff142204e02301331fd56b26699819",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "device_id": "10de:2684",
+  "SMs": 128,
+  "compute_capability": "8.9",
+  "kernel": "7.2.11-arch1-1",
+  "driver": "615.78.08",
+  "CUDA_toolkit": "13.4.92",
+  "power_limit_W": 450,
+  "prior_stock_baseline": "../comparison.json stock phase; this follow-up is not a second stock/unlocked pair",
+  "status": "passed",
+  "journal_returncode": 0,
+  "pre_driver_boot_evidence": "Selected-card gpu_unlock: unlocked message after ordinary warm reboot; selected sanitized line in warm-boot-excerpt.txt.",
+  "post_driver_selector_readback": {
+    "command": "0x20801230",
+    "rates": {
+      "imla0": 0,
+      "fmla16": 0,
+      "dp": 0,
+      "fmla32": 0,
+      "ffma": 0,
+      "imla1": 0,
+      "imla2": 0,
+      "imla3": 0,
+      "imla4": 0
+    },
+    "meaning": "0=full; 1=half; 2=quarter; higher values are further reductions"
+  },
+  "mma_best_Top_s": {
+    "f16/f16": 320.5,
+    "f16/f32": 320.4,
+    "bf16/f32": 318.8,
+    "s8/s32": 637.4,
+    "dp4a": 158.5,
+    "ffma": 76.3
+  },
+  "gemm_median_TF_s": [
+    {
+      "mode": "FP16/FP32",
+      "n": 1024,
+      "median_TF_s": 124.830477,
+      "cells_checked": 1048576,
+      "failures": 0
+    },
+    {
+      "mode": "BF16/FP32",
+      "n": 1024,
+      "median_TF_s": 150.031,
+      "cells_checked": 1048576,
+      "failures": 0
+    },
+    {
+      "mode": "FP16/FP32",
+      "n": 4096,
+      "median_TF_s": 198.70861,
+      "cells_checked": 16777216,
+      "failures": 0
+    },
+    {
+      "mode": "BF16/FP32",
+      "n": 4096,
+      "median_TF_s": 140.822298,
+      "cells_checked": 16777216,
+      "failures": 0
+    },
+    {
+      "mode": "FP16/FP32",
+      "n": 8192,
+      "median_TF_s": 189.97251,
+      "cells_checked": 67108864,
+      "failures": 0
+    },
+    {
+      "mode": "BF16/FP32",
+      "n": 8192,
+      "median_TF_s": 191.398517,
+      "cells_checked": 67108864,
+      "failures": 0
+    }
+  ],
+  "active_telemetry": {
+    "power.draw [W]": {
+      "min": 70.01,
+      "max": 300.85,
+      "mean": 170.8235294117647
+    },
+    "temperature.gpu": {
+      "min": 56.0,
+      "max": 75.0,
+      "mean": 62.794117647058826
+    },
+    "clocks.current.sm [MHz]": {
+      "min": 2580.0,
+      "max": 2670.0,
+      "mean": 2652.794117647059
+    }
+  },
+  "comparison_ratios_vs_existing_stock_baseline": {
+    "mma_ratios": {
+      "f16/f16": 0.9996880848409232,
+      "f16/f32": 1.997506234413965,
+      "bf16/f32": 1.9962429555416408,
+      "s8/s32": 0.9942286694743409,
+      "dp4a": 0.9962287869264613,
+      "ffma": 0.9986910994764396
+    },
+    "gemm_ratios": [
+      {
+        "mode": "FP16/FP32",
+        "n": 1024,
+        "median_ratio": 1.1607142976692746
+      },
+      {
+        "mode": "BF16/FP32",
+        "n": 1024,
+        "median_ratio": 1.180415907878354
+      },
+      {
+        "mode": "FP16/FP32",
+        "n": 4096,
+        "median_ratio": 1.2967651952547812
+      },
+      {
+        "mode": "BF16/FP32",
+        "n": 4096,
+        "median_ratio": 0.9178994810875999
+      },
+      {
+        "mode": "FP16/FP32",
+        "n": 8192,
+        "median_ratio": 1.1262646922184016
+      },
+      {
+        "mode": "BF16/FP32",
+        "n": 8192,
+        "median_ratio": 1.1516379863765465
+      }
+    ]
+  },
+  "checks": {
+    "benchmark_commands_returncode_zero": true,
+    "background_compute_processes": false,
+    "NVRM_Xid_count": 0,
+    "large_gemm_cells_checked": 169869312,
+    "large_gemm_failures": 0,
+    "seeded_numerical_failures": 0
+  },
+  "benchmark_hashes": {
+    "bin/gemm_bench": "24db45e2f7b618d032f22a88a53dfff8092a63476ba19622b99857778d7c5e3e",
+    "bin/mma_bench": "3b27ace8caedc65815fc6e3724c7af0b5b94530e8795bd5b1d588e74f1efe538",
+    "bin/read_sm_rates.py": "1e5ef78dfcbe8ce5960fd81c81eb1ede86f08babbb8715d7e40ac1e8f9329421",
+    "bin/tensor_modes_driver_runner.py": "1f5340454ddf4fc2310eec8694a3bdf84ec0abcfcf3aae980939d1840ff3305d",
+    "bin/tensor_modes_issue_sm89.cubin": "33aa6db385aa9eb8a1f73bb2f74891aea84794326b7c40992bc642f93a3c614d",
+    "bin/tensor_modes_issue_sm89.ptx": "d0adaf4bd42da19f60f3e1c623388aad5d290b3531f3f6f3bffca6bf86334ea8",
+    "bin/validate_gemm": "53600d5a831d1a9a8e44edd4590461a8ba81ecc117e0e3124c88bd271712a766",
+    "src/bench_args.h": "bd548217d69e262df0dc682b142bbda7f32fb6061fcdbe448fa3882ddfb13400",
+    "src/gemm_bench.cu": "c35ec706f9587b9749bf369a35d4dfca9e88c666c4582726490e0138cdd6e240",
+    "src/gemm_inputs.h": "c6005990cbc8ebc584e46ceca6b04a86213bd8399bb59bad3881a9c3b86a436d",
+    "src/mma_bench.cu": "49d4f1aa04b48c958766ce2c3764e3dbda8b9dfe5ae72a42d93efe480f639c5d",
+    "src/tensor_modes_issue.cu": "46cc852ec15ba2d12a259d7698e8fcd2104dfb07a5947a38d46c7bd6b5f5462f",
+    "src/validate_gemm.cu": "06071e4ae031aaf8b87a0abbd570211b226b68dadb723007e4fe2bdffa853992",
+    "run_suite.py": "a92d04132a008ed0b046fec6e44da9e09f85dbe1e1dea88d59b2483035426202",
+    "session.json": "b5f1335c30a0ae7aa64a26ed744933ca2cd0dbdea04982af997894af7ee33093"
+  },
+  "limitations": [
+    "One warm reboot and one repeat run on this card/configuration; not evidence of general persistence or broad compatibility.",
+    "Compared against the single existing stock run; not an independently repeated matched pair.",
+    "No extended stability test or representative application benchmark.",
+    "Desktop activity, clocks and temperature can affect timings.",
+    "The 4096 BF16 GEMM median was slower than the stock baseline in this run; investigate variance before drawing workload conclusions."
+  ],
+  "sanitization": "GPU UUID, PCI address, host name, boot ID, root UUID, private paths and raw report/session omitted. Telemetry UUID column removed. Numerical PCI address replaced. Numeric results preserved."
+}
