@@ -27,13 +27,13 @@ There are two separate steps:
 
 ```mermaid
 flowchart TD
-    A["Early boot: NVIDIA remains unbound"] --> B["SEC2 payload writes CYA / CFG"]
-    B --> C["Verify 64 GiB capability and tensor selectors"]
-    C --> D["FLR, then verify capability again"]
-    D -->|Pass| E["Allocate bridge windows, BAR1 and BAR3"]
-    D -->|Fail| H["Keep GPUs unbound for recovery"]
-    E --> F{"All eight BAR1 resources are 64 GiB?"}
-    F -->|Yes| G["Allow NVIDIA to bind, then start the workload"]
+    A["Early boot:<br>NVIDIA remains unbound"] --> B["SEC2 payload<br>writes CYA / CFG"]
+    B --> C["Verify 64 GiB<br>capability and tensor selectors"]
+    C --> D["FLR, then verify<br>capability again"]
+    D -->|Pass| E["Allocate bridge windows,<br>BAR1 and BAR3"]
+    D -->|Fail| H["Keep GPUs unbound<br>for recovery"]
+    E --> F{"All eight BAR1 resources<br>are 64 GiB?"}
+    F -->|Yes| G["Allow NVIDIA to bind,<br>then start the workload"]
     F -->|No| H
 ```
 
@@ -120,8 +120,8 @@ firmware across Ada chips does not establish support for untested cards.
 
 ## Related reading
 
-- [64 GiB BAR1 on RTX 4090 48G](http://aajax.top/2026/10/25/64GigabyteBAR1on409048G/)
-  — companion write-up, in preparation.
+- [64 GiB BAR1 on RTX 4090 48G](http://aajax.top/2026/10/24/64GigabyteBAR1on409048G/)
+  — companion write-up.
 - [给 48G 魔改 4090 解锁 PCIe P2P：动态 BAR1 映射的实现](https://duanyll.com/2026/7/13/4090-48G-P2P/)
   — background on the 32 GiB aperture limit and prior work on per-allocation
   dynamic BAR1 mappings in the driver.
