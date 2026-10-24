@@ -1,0 +1,46 @@
+MSI release case 0 PASS stops=3 decode_writes=1
+MSI release case 3 PASS stops=1 decode_writes=0
+MSI release case 4 PASS stops=1 decode_writes=0
+MSI release case 5 PASS stops=1 decode_writes=0
+MSI release case 6 PASS stops=2 decode_writes=0
+MSI release case 7 PASS stops=3 decode_writes=0
+MSI release case 8 PASS stops=3 decode_writes=0
+MSI release case 9 PASS stops=3 decode_writes=1
+MSI release case 10 PASS stops=3 decode_writes=0
+MSI release case 11 PASS stops=3 decode_writes=1
+MSI release case 12 PASS stops=3 decode_writes=1
+MSI drift case 13 PASS
+MSI drift case 14 PASS
+MSI drift case 15 PASS
+MSI drift case 16 PASS
+MSI drift case 17 PASS
+MSI drift case 18 PASS
+MSI drift case 19 PASS
+MSI enumeration case 20 PASS
+MSI enumeration case 21 PASS
+MSI enumeration case 22 PASS
+MSI enumeration case 23 PASS
+MSI enumeration case 24 PASS
+MSI enumeration case 25 PASS
+MSI enumeration case 26 PASS
+MSI enumeration case 27 PASS
+MSI enumeration case 28 PASS
+MSI late pointer case 29 PASS
+MSI late pointer case 30 PASS
+MSI late pointer case 31 PASS
+MSI late pointer case 32 PASS
+MSI late pointer case 33 PASS
+MSI late pointer case 34 PASS
+MSI late pointer case 35 PASS
+MSI late pointer case 36 PASS
+MSI late pointer case 37 PASS
+MSI late pointer case 38 PASS
+MSI late pointer case 39 PASS
+MSI USB lifecycle case 40 PASS
+MSI USB lifecycle case 41 PASS
+MSI USB lifecycle case 42 PASS
+MSI USB lifecycle case 43 PASS
+MSI USB lifecycle case 44 PASS
+MSI USB lifecycle case 45 PASS
+MSI USB lifecycle case 46 PASS
+MSI: 761339 checks across 47 cases; captured graph/code, all callbacks simulated.

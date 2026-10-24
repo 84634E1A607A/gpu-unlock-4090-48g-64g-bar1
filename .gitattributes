@@ -29,3 +29,9 @@
 # Keep published evidence bytes identical on Windows and Linux clones.
 /docs/evidence/ada2705/* -text
 /docs/evidence/rtx4090/* -text
+
+# Latence.app: keep source available in archives and preserve exact evidence/header bytes.
+/windows -export-ignore
+/docs/evidence/ad104-windows/** -text whitespace=cr-at-eol,-blank-at-eof
+/windows/ad104-msi/benchmark.py -text
+/windows/ad104-msi/vendor/edk2/** -text whitespace=cr-at-eol,-blank-at-eof

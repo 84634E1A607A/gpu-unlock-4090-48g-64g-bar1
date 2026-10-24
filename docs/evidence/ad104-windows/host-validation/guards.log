@@ -1,0 +1,18 @@
+AD104 guard mutated asset after preload PASS
+AD104 guard mutated asset after preload PASS
+AD104 guard mutated asset after preload PASS
+AD104 guard mutated asset after preload PASS
+AD104 guard mutated asset after preload PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard identity/cold state/ownership/retry PASS
+AD104 guard changed physical ROM PASS
+AD104 guard unsupported FWSEC fuse version PASS
+17 admission cases PASS; all hardware operations simulated.
