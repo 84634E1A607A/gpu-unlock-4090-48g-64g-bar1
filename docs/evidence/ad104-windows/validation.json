@@ -1,0 +1,48 @@
+{
+  "version": "0.5.4",
+  "efi_sha256": "b27709643f57284bf5d1e8941caa8f9b12725d7b32c5a9863e89ebafd456a37f",
+  "hardware": "MSI RTX 4070 Ti AD104 10de:2782 subsystem 1462:5132 A1, MSI Z490 MS-7C75 BIOS A.E0",
+  "driver": "616.56",
+  "vbios": "95.04.3c.40.fd",
+  "windows_handoff": "user confirmed automatic return from UEFI; no intervening power off",
+  "transaction_completed": true,
+  "flrs": 1,
+  "dma_live_at_completion": 0,
+  "windows_gain_observed": true,
+  "benchmark": "cuBLAS GEMM 4096x4096, 15 samples x 5 products; median across 3 independent processes",
+  "rows": [
+    {
+      "mode": "fp32_pedantic",
+      "stock_tflops": 30.226964022473208,
+      "after_tflops": 30.527228705266726,
+      "change_percent": 0.9933669903807729,
+      "all_after_full_256_exact": true,
+      "all_after_sampled_large_exact": true,
+      "all_output_sha256_match_stock": true
+    },
+    {
+      "mode": "fp16_fp32",
+      "stock_tflops": 84.07755700444267,
+      "after_tflops": 151.4296012471355,
+      "change_percent": 80.1070424050665,
+      "all_after_full_256_exact": true,
+      "all_after_sampled_large_exact": true,
+      "all_output_sha256_match_stock": true
+    },
+    {
+      "mode": "bf16_fp32",
+      "stock_tflops": 84.02656479972585,
+      "after_tflops": 148.24749813795242,
+      "change_percent": 76.42932147862376,
+      "all_after_full_256_exact": true,
+      "all_after_sampled_large_exact": true,
+      "all_output_sha256_match_stock": true
+    }
+  ],
+  "matched_comparison_passed": true,
+  "full_cold_ABA_completed": false,
+  "qualification_scope": "one successful cold/manual launch and three short Windows GEMM runs on this exact machine; not general or long-duration qualification",
+  "condition_notes": "The stock baseline was taken earlier in the same day. Temperatures and background memory use differ. SM clocks at Tensor measurements were about 2940 MHz stock and 2565-2595 MHz after; memory clocks 10251 MHz, configured power limit 285 W both phases. Telemetry consists of point samples, not continuous traces.",
+  "brand": "Latence.app",
+  "public_source_note": "ESP identifier replaced by an excluded local configuration header; hardware transaction code unchanged. The historical tested EFI hash is recorded, not a portable binary release."
+}

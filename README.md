@@ -52,6 +52,16 @@ This fork integrates that published payload into
 **[Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock)**'s Linux module,
 firmware generation and boot packaging. The payload is essential to the result.
 
+## Experimental Windows contribution — Latence.app
+
+A separate [MSI RTX 4070 Ti AD104 Windows UEFI reference port](windows/ad104-msi/README.md)
+records one successful manual boot with NVIDIA 616.56 and matched cuBLAS FP16/FP32
+**+80.1%**, BF16/FP32 **+76.4%** measurements. It is tied to one captured MSI Z490
+profile; it does **not** add AD104 admission to the Linux module. See the
+[report and limitations](docs/ad104-windows-latence-app.md). No firmware/Windows/ROM
+binaries or automatic boot installer are distributed. Contribution by **Latence.app**;
+original upstream credits and licences are retained.
+
 ## Supported targets
 
 The module selects the AD102 firmware and payload automatically for RTX 4090

@@ -32,3 +32,9 @@
 /docs/evidence/rtx4090-pr1-stock/* -text
 /docs/evidence/rtx4090-pr1-stock/gemm_bench.cu -export-ignore
 /docs/evidence/rtx4090-pr1-matched/* -text
+
+# Latence.app: keep source available in archives and preserve exact evidence/header bytes.
+/windows -export-ignore
+/docs/evidence/ad104-windows/** -text whitespace=cr-at-eol,-blank-at-eof
+/windows/ad104-msi/benchmark.py -text
+/windows/ad104-msi/vendor/edk2/** -text whitespace=cr-at-eol,-blank-at-eof

@@ -1,0 +1,8 @@
+boot I/O case 0 PASS loads=1 starts=1
+boot I/O case 2 PASS loads=0 starts=0
+boot I/O case 3 PASS loads=0 starts=0
+boot I/O case 4 PASS loads=0 starts=0
+boot I/O case 5 PASS loads=0 starts=0
+boot I/O case 6 PASS loads=1 starts=0
+boot I/O case 7 PASS loads=1 starts=0
+boot I/O: 571 checks; 8 cases, real file bytes, all EFI services simulated.
