@@ -11,7 +11,7 @@
 
 A guarded trial with the experimental option and one exact PCI target completed successfully on this single card. The kernel path reported `gpu_unlock: unlocked`; the firmware marker matched the expected value, required permissions were present, and the boot processor reached the expected halted state. The effective hardware readout reported full rates before and after function-level reset.
 
-An independent read of the NVIDIA resource-manager rate getter showed the measured `fmla32`, `imla2`, and `imla4` modes change from `1` (half rate) to `0` (full rate). The driver enumerated 32,760 MiB of VRAM after the trial.
+An independent read of the NVIDIA resource-manager getter showed the FMLA32, IMLA2, and IMLA4 encodings change from `1` to `0`. The driver enumerated 32,760 MiB of VRAM after the trial.
 
 FP16 and BF16 CUDA GEMMs (2048 x 2048, FP32 accumulation) produced bitwise-identical before/after outputs by full SHA-256. Relative Frobenius errors against FP64 were unchanged: `0.00035876` for FP16 and `0.00286997` for BF16. Across five windows of 20 matmuls, median time changed from `0.21929 ms` to `0.11544 ms` for FP16 and from `0.21934 ms` to `0.11546 ms` for BF16, at the same 320 W power limit with clocks unlocked. This is a synthetic GEMM result, not an application or prefill result.
 

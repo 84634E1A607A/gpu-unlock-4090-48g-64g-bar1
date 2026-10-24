@@ -1,4 +1,4 @@
-# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER and RTX 4060 Ti 16GB
+# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER, RTX 4060 Ti 16GB and experimental RTX 4080
 
 New to this project? Start with the [copy-paste Quick Start](QUICKSTART.md).
 
@@ -85,9 +85,19 @@ card**. It uses the same AD102-family payload and requires both
 `gpu_unlock.ad106_experimental=1` and a single exact PCI address; `targets=all`
 never selects it. On the tested card, one cold boot passed every marker,
 permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
-the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
+the RM getter's FMLA32, IMLA2 and IMLA4 encodings changed from `1` to `0`. No
 same-card stock throughput run has been made yet. See the
 [2805 report](docs/ada-2805-report.md).
+
+
+RTX 4080 `10de:2704` is an **experimental AD102-family target validated on one
+modified-32-GiB card**. It requires `gpu_unlock.rtx4080_experimental=1` and one
+exact PCI address; `targets=all` never selects it. The single-card report
+records the guarded trial, driver handoff, unchanged CUDA GEMM outputs, and
+synthetic GEMM timings. Other cards and memory configurations, boot
+repeatability, and application-level gains remain unverified. See the
+[RTX 4080 hardware report](docs/rtx4080-hardware-report.md).
+
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
@@ -148,12 +158,14 @@ gpu_unlock.targets=0000:03:00.0,0000:04:00.0
 gpu_unlock.targets=all
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
+gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
 ```
 
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. RTX 4070 Ti SUPER `10de:2705` and RTX 4060 Ti 16GB `10de:2805` each
+addresses. RTX 4070 Ti SUPER `10de:2705`, RTX 4060 Ti 16GB `10de:2805`, and
+RTX 4080 `10de:2704` each
 require their own experimental flag and a single exact PCI address; `all` never
 selects them. Invalid entries
 are logged and ignored.
