@@ -118,6 +118,8 @@ static const struct cluster_reg cluster_regs[] = {
 	{ "FECS_FEAT_OVERRIDE_SM_SPEED_SEL", 0x00409664 },
 	{ "FECS_FEAT_READOUT_1",             0x00409668 },
 	{ "SM_ISSUE_RATE_MODIFIER",          0x00504204 },
+	{ "GU_FUSE_SEC2_UCODE1",             0x00824148 },
+	{ "FWSEC fuse (ucode id 9)",         0x008241e0 },
 };
 
 static void peek_cluster(struct pci_dev *pdev, void __iomem *bar)
