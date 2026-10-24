@@ -4,6 +4,7 @@
  * the board ROM, Booter with the V67 signature, the SS0/SS1 selector writes, then
  * FLR so the stock driver starts from a clean, halted GSP.
  */
+#include <crypto/sha2.h>
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/firmware.h>
@@ -19,6 +20,7 @@
 #include "prep_610.h"
 #include "unlock_610.h"
 #include "vbios_610.h"
+#include "firmware_pins_610.h"
 
 #define SEC2_BASE 0x00840000u
 #define SEC2_FBIF 0x00840600u
@@ -216,6 +218,27 @@ static void *diag_dma_alloc(struct unlock_transaction_work *work, const char *na
 	return memory;
 }
 
+/* Check the requested bytes, including shared GSP, before touching the card. */
+static int verify_asset(struct device *dev, const struct firmware *fw, const char *name)
+{
+	u8 digest[SHA256_DIGEST_SIZE];
+	unsigned int i;
+
+	/* Bound the hash input as well as the later parser/allocation sizes. */
+	if (!fw->size || fw->size > (128u << 20))
+		return -EBADMSG;
+	for (i = 0; i < ARRAY_SIZE(firmware_pins); i++) {
+		if (strcmp(name, firmware_pins[i].name))
+			continue;
+		sha256(fw->data, fw->size, digest);
+		if (!memcmp(digest, firmware_pins[i].digest, sizeof(digest)))
+			return 0;
+		break;
+	}
+	dev_err(dev, "firmware SHA-256 mismatch or unknown asset: %s\n", name);
+	return -EBADMSG;
+}
+
 /* CONFIG_FW_CACHE attaches name records to devres even though this is not
  * devm_request_firmware(). release_firmware() does not remove them, and
  * really_probe() refuses a device with any existing devres. Scope each
@@ -233,6 +256,13 @@ static int request_scoped(struct device *dev, const struct firmware **fw, const 
 	dev_info(dev, "asset request: %s\n", name);
 	ret = request_firmware(fw, name, dev);
 	released = devres_release_group(dev, group);
+	if (!ret) {
+		ret = verify_asset(dev, *fw, name);
+		if (ret) {
+			release_firmware(*fw);
+			*fw = NULL;
+		}
+	}
 	dev_info(dev, "asset result: %s error=%d bytes=%zu\n",
 		name, ret, ret ? (size_t)0 : (*fw)->size);
 	dev_info(dev, "asset cache cleanup: %s devres_released=%d\n", name, released);

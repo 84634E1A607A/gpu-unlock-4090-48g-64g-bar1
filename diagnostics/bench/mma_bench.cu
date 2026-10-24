@@ -31,9 +31,12 @@
  */
 #include <cstdio>
 #include <cstdlib>
+#include <climits>
+#include <vector>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 #include <mma.h>
+#include "bench_args.h"
 
 using namespace nvcuda;
 
@@ -181,8 +184,15 @@ struct mode {
 
 int main(int argc, char **argv)
 {
-	unsigned long long iters = argc > 1 ? strtoull(argv[1], NULL, 0) : 20000;
-	int reps = argc > 2 ? atoi(argv[2]) : 3;
+	unsigned long long iters = 20000, repetitions = 3;
+	if (argc > 3 ||
+	    (argc > 1 && !bench_positive_count(argv[1], ULLONG_MAX, &iters)) ||
+	    (argc > 2 && !bench_positive_count(argv[2], INT_MAX, &repetitions))) {
+		std::fprintf(stderr, "usage: %s [positive iterations] [positive repetitions <= %d]\n",
+			     argv[0], INT_MAX);
+		return 2;
+	}
+	int reps = (int)repetitions;
 	struct mode modes[] = {
 		{ "f16/f16 ", launch_mma_f16_f16, WMMA_FLOPS * CHAINS },
 		{ "f16/f32 ", launch_mma_f16_f32, WMMA_FLOPS * CHAINS },
@@ -207,8 +217,7 @@ int main(int argc, char **argv)
 	printf("%-9s %10s %10s\n", "mode", "best TF/s", "all runs");
 	for (i = 0; i < sizeof(modes) / sizeof(modes[0]); i++) {
 		double best = 0.0, tflops;
-		char runs[128] = "";
-		size_t used = 0;
+		std::vector<double> runs;
 
 		for (r = 0; r < reps; r++) {
 			float ms = time_ms(modes[i].launch, iters, sink);
@@ -217,10 +226,12 @@ int main(int argc, char **argv)
 			tflops = warps * (double)iters * modes[i].flops_per_warp_iter / (ms * 1e9);
 			if (tflops > best)
 				best = tflops;
-			used += snprintf(runs + used, sizeof(runs) - used, "%s%.1f",
-					 used ? "/" : "", tflops);
+			runs.push_back(tflops);
 		}
-		printf("%-9s %10.1f %10s\n", modes[i].name, best, runs);
+		printf("%-9s %10.1f ", modes[i].name, best);
+		for (size_t run = 0; run < runs.size(); run++)
+			printf("%s%.1f", run ? "/" : "", runs[run]);
+		printf("\n");
 	}
 	cuda_check(cudaFree(sink), "free sink");
 	return 0;

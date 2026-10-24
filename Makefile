@@ -7,6 +7,7 @@ DISTDIR    ?= build
 CACHE      ?= $(HOME)/.cache/gpu-unlock
 INPUTS     ?= $(CACHE)/inputs
 ASSETS     ?= $(CACHE)/assets
+NVIDIA_SOURCE ?= $(if $(GPU_UNLOCK_NVIDIA_SOURCE),$(GPU_UNLOCK_NVIDIA_SOURCE),$(ASSETS).src/$(NV_SOURCE))
 DKMSDIR    ?= /usr/src/gpu-unlock-$(VERSION)
 FWDIR      ?= /usr/lib/firmware/gpu-unlock/$(NV)
 LICENSEDIR ?= /usr/share/licenses
@@ -27,7 +28,7 @@ DEBDIR  := $(abspath $(DISTDIR))/deb
 RPMDIR  := $(abspath $(DISTDIR))/rpm
 DEBS    := $(foreach p,dkms firmware,$(DEBDIR)/gpu-unlock-$(p)_$(VERSION)_all.deb)
 
-.PHONY: all test dist inputs firmware assets install-dkms install-firmware \
+.PHONY: all test test-full dist inputs firmware assets install-dkms install-firmware \
         install-mkinitcpio install-initramfs-tools install-dracut \
         install-licenses arch deb rpm install install-arch install-deb install-rpm
 
@@ -36,7 +37,11 @@ all:
 # With generated or installed firmware, the tests also run the whole unlock
 # against mocked hardware.
 test:
-	GPU_UNLOCK_ASSETS=$(ASSETS) $(PYTHON) -m unittest discover -s tests -v
+	GPU_UNLOCK_ASSETS="$(ASSETS)" GPU_UNLOCK_NVIDIA_SOURCE="$(NVIDIA_SOURCE)" $(PYTHON) -m unittest discover -s tests -v
+
+# Refuse a green pre-hardware check that omits the real-asset transactions.
+test-full:
+	GPU_UNLOCK_REQUIRE_INPUTS=1 $(MAKE) test
 
 # Source-only release tarball; see .gitattributes for what is left out.
 dist:

@@ -20,6 +20,7 @@ static struct {
     int fw_requests,fail_fw,fail_claim,fail_map,fail_save,fail_context,pins,selector_bad;
     int restore_mask_fail,late_devres;
     int group_requests,fail_group,group_live,group_before,cache_records,cache_released;
+    int hashes,bad_hash;
     int switch_stuck,dma_commands,dma_stall_after;
     int reset_delay,reset_reads[2],reset_pending[2],reset_post_fault;
     int reset_locked_until_flr,hold_writes,bar_ready_after,bar_ready_reads,wpr_after;
@@ -48,10 +49,21 @@ static bool fake_ada_id(void) {
 }
 static u8 fw_image[4097];
 static struct firmware fw={sizeof(fw_image),fw_image};
+static const u8 *hash_data;
+static size_t hash_size;
+static u8 hash_result[SHA256_DIGEST_SIZE];
+/* Model the kernel hash primitive, including injected digest mismatches. The
+ * Python runner independently hashes real assets before enabling full runs. */
+void sha256(const u8 *data,size_t size,u8 digest[SHA256_DIGEST_SIZE]) {
+    assert(data==hash_data && size==hash_size);
+    memcpy(digest,hash_result,SHA256_DIGEST_SIZE);
+    if(++fake.hashes==fake.bad_hash)digest[0]^=1;
+}
 static void setup(struct unlock_transaction_work *w) {
     memset(&fake,0,sizeof(fake)); memset(regs,0,sizeof(regs)); memset(w,0,sizeof(*w));
     mask=0xffffffffffffull; dev=(struct pci_dev){.dev={.dma_mask=&mask,.coherent_dma_mask=0xfffffffffull},.vendor=0x10de,.device=0x2204,.refs=1};
     w->pdev=&dev; w->bar=regs; w->bar_len=sizeof(regs); w->mapped=true;
+    hash_data=NULL;hash_size=0;memset(hash_result,0,sizeof(hash_result));
     fake.cmd=2;fake.saved=2;regs[(SEC2_BASE+0xf4)/4]=1u<<31;regs[(0x110000+0xf4)/4]=1u<<31;
     regs[(SEC2_BASE+0x118)/4]=2;regs[(0x110000+0x118)/4]=2;
     regs[GU_FEAT_SS0_OFFSET/4]=0x88888888;regs[GU_FEAT_SS1_OFFSET/4]=0;
@@ -183,6 +195,13 @@ int request_firmware(const struct firmware **f,const char *n,struct device *d) {
     struct firmware *loaded=malloc(sizeof(*loaded));u8 *data=malloc(size);assert(loaded && data);
     assert(fread(data,1,size,file)==(size_t)size);fclose(file);
     *loaded=(struct firmware){size,data};*f=loaded;fake.fw_live++;
+    hash_data=data;hash_size=size;
+    bool pinned=false;
+    for(unsigned i=0;i<ARRAY_SIZE(firmware_pins);i++)
+        if(!strcmp(n,firmware_pins[i].name)) {
+            memcpy(hash_result,firmware_pins[i].digest,sizeof(hash_result));pinned=true;break;
+        }
+    assert(pinned);
     /* Linux CONFIG_FW_CACHE: successful request adds a device resource;
      * release_firmware frees the image, not this suspend-cache record. */
     d->devres_head.count++;fake.cache_records++;return 0;
@@ -312,6 +331,21 @@ static void load_rom(const char *path) {
 }
 int main(int argc, char **argv) {
     struct unlock_transaction_work w;
+    /* Compare all pinned digest choices, reject wrong hashes, empty/oversized
+     * input and unknown names without any firmware or device activity. */
+    setup(&w);hash_data=fw.data;hash_size=fw.size;
+    for(unsigned i=0;i<ARRAY_SIZE(firmware_pins);i++) {
+        memcpy(hash_result,firmware_pins[i].digest,sizeof(hash_result));
+        assert(!verify_asset(&dev.dev,&fw,firmware_pins[i].name));
+        hash_result[0]^=1;
+        assert(verify_asset(&dev.dev,&fw,firmware_pins[i].name)==-EBADMSG);
+    }
+    struct firmware invalid={0,fw_image};
+    assert(verify_asset(&dev.dev,&invalid,GSP_FILE)==-EBADMSG);
+    invalid.size=(128u<<20)+1;
+    assert(verify_asset(&dev.dev,&invalid,GSP_FILE)==-EBADMSG);
+    assert(verify_asset(&dev.dev,&fw,"unknown")==-EBADMSG);
+    assert(!fake.writes && !fake.allocs);
     setup(&w);
     assert(!strcmp(unlock_assets(&dev)->booter, BOOTER_FILE_GA102));
     assert(!strcmp(unlock_assets(&dev)->signature_section, ".fwsignature_ga10x"));
@@ -602,7 +636,8 @@ int main(int argc, char **argv) {
             "post-gfw-late","post-gfw-timeout","post-gfw-inaccessible","post-gsp-resumed",
             "wpr-frts-retained","firmware-group-oom-first","firmware-group-oom-later","devres-preexisting","devres-at-handoff",
             "warm-wpr2","ss1-readback","ss1-lost","power-unknown","power-unknown-no-pm",
-            "firmware-bme","firmware-bme-stuck"};
+            "firmware-bme","firmware-bme-stuck",
+            "hash-gsp","hash-payload","hash-boot","hash-desc","hash-booter"};
         int total_allocations=0;
         for(unsigned scenario=0;scenario<ARRAY_SIZE(cases);scenario++) {
             setup(&w);
@@ -668,6 +703,7 @@ int main(int argc, char **argv) {
             if(scenario==58)dev.pm_cap=0x60;
             if(scenario==60 || scenario==61)fake.cmd=6; /* firmware left BME set */
             if(scenario==61)fake.master_stuck=1;
+            if(scenario>=62)fake.bad_hash=scenario-61;
             /* As main.c: the GSP file is loaded once, ahead of every card. */
             struct gpu_unlock_610_shared shared={0};last_work=NULL;
             int ret=gpu_unlock_610_load_shared(&dev,&shared);
@@ -726,6 +762,7 @@ int main(int argc, char **argv) {
             if(scenario==59)assert(ret==-EOPNOTSUPP && !fake.allocs && !fake.flrs);
             if(scenario==60)assert(strstr(fake.log,"claim: cleared firmware BME"));
             if(scenario==61)assert(ret==-EBUSY && !fake.allocs && !fake.flrs);
+            if(scenario>=62)assert(ret==-EBADMSG && !retained && !fake.writes && !fake.allocs && !fake.regions);
             if(scenario==55) {
                 assert(ret==-EBUSY && !retained && !fake.gsp_starts && !fake.starts && !fake.flrs);
                 assert(strstr(fake.log,"card already initialised since power on"));

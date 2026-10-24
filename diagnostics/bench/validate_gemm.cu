@@ -12,6 +12,7 @@
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 #include <cublas_v2.h>
+#include "gemm_inputs.h"
 
 static void cuda_check(cudaError_t code, const char *where)
 {
@@ -39,11 +40,10 @@ template <> __nv_bfloat16 convert<__nv_bfloat16>(float x)
 
 template <typename T>
 static bool check_mode(cublasHandle_t handle, const char *name,
-			    cudaDataType input_type)
+			    cudaDataType input_type, int m, int n, int k, uint32_t seed)
 {
-	constexpr int n = 256;
-	constexpr size_t count = (size_t)n * n;
-	std::vector<T> a(count), b(count);
+	const size_t count = (size_t)m * n;
+	std::vector<T> a((size_t)m * k), b((size_t)k * n);
 	std::vector<float> reference(count, 0.0f), result(count);
 	T *device_a = nullptr, *device_b = nullptr;
 	float *device_c = nullptr;
@@ -51,26 +51,26 @@ static bool check_mode(cublasHandle_t handle, const char *name,
 	int failures = 0;
 	float max_abs = 0.0f;
 
-	/* Values are exact in half, bfloat16 and float, including their products. */
+	for (int col = 0; col < k; ++col)
+		for (int row = 0; row < m; ++row)
+			a[row + col * m] = convert<T>(gemm_input(row, col, seed));
 	for (int col = 0; col < n; ++col)
-		for (int row = 0; row < n; ++row) {
-			a[row + col * n] = convert<T>(((row * 17 + col * 11) % 17 - 8) / 8.0f);
-			b[row + col * n] = convert<T>(((row * 7 + col * 13) % 19 - 9) / 8.0f);
-		}
+		for (int row = 0; row < k; ++row)
+			b[row + col * k] = convert<T>(gemm_input(row, col, seed ^ 0xa5a5a5a5u));
 	for (int col = 0; col < n; ++col)
-		for (int k = 0; k < n; ++k)
-			for (int row = 0; row < n; ++row)
-				reference[row + col * n] +=
-					(float)a[row + k * n] * (float)b[k + col * n];
+		for (int inner = 0; inner < k; ++inner)
+			for (int row = 0; row < m; ++row)
+				reference[row + col * m] +=
+					(float)a[row + inner * m] * (float)b[inner + col * k];
 
-	cuda_check(cudaMalloc(&device_a, count * sizeof(T)), "cudaMalloc(A)");
-	cuda_check(cudaMalloc(&device_b, count * sizeof(T)), "cudaMalloc(B)");
+	cuda_check(cudaMalloc(&device_a, a.size() * sizeof(T)), "cudaMalloc(A)");
+	cuda_check(cudaMalloc(&device_b, b.size() * sizeof(T)), "cudaMalloc(B)");
 	cuda_check(cudaMalloc(&device_c, count * sizeof(float)), "cudaMalloc(C)");
-	cuda_check(cudaMemcpy(device_a, a.data(), count * sizeof(T), cudaMemcpyHostToDevice), "copy A");
-	cuda_check(cudaMemcpy(device_b, b.data(), count * sizeof(T), cudaMemcpyHostToDevice), "copy B");
-	blas_check(cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n,
-				&alpha, device_a, input_type, n, device_b, input_type, n,
-				&beta, device_c, CUDA_R_32F, n,
+	cuda_check(cudaMemcpy(device_a, a.data(), a.size() * sizeof(T), cudaMemcpyHostToDevice), "copy A");
+	cuda_check(cudaMemcpy(device_b, b.data(), b.size() * sizeof(T), cudaMemcpyHostToDevice), "copy B");
+	blas_check(cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k,
+				&alpha, device_a, input_type, m, device_b, input_type, k,
+				&beta, device_c, CUDA_R_32F, m,
 				CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP), "cublasGemmEx");
 	cuda_check(cudaDeviceSynchronize(), "GEMM synchronize");
 	cuda_check(cudaMemcpy(result.data(), device_c, count * sizeof(float),
@@ -85,8 +85,8 @@ static bool check_mode(cublasHandle_t handle, const char *name,
 		if (diff > max_abs)
 			max_abs = diff;
 	}
-	std::printf("%s: %zu cells, failures=%d, max_abs=%.8g\n",
-		    name, count, failures, max_abs);
+	std::printf("%s: m=%d n=%d k=%d seed=%u, %zu cells, failures=%d, max_abs=%.8g\n",
+		    name, m, n, k, seed, count, failures, max_abs);
 	cuda_check(cudaFree(device_a), "free A");
 	cuda_check(cudaFree(device_b), "free B");
 	cuda_check(cudaFree(device_c), "free C");
@@ -107,8 +107,16 @@ int main()
 		return 3;
 	}
 	blas_check(cublasCreate(&handle), "cublasCreate");
-	bool pass_half = check_mode<__half>(handle, "FP16/FP32", CUDA_R_16F);
-	bool pass_bf16 = check_mode<__nv_bfloat16>(handle, "BF16/FP32", CUDA_R_16BF);
+	bool pass = true;
+	const struct { int m, n, k; uint32_t seed; } cases[] = {
+		{256, 256, 256, 1}, {64, 96, 128, 2}, {127, 65, 95, 3},
+	};
+	for (const auto &test : cases) {
+		pass &= check_mode<__half>(handle, "FP16/FP32", CUDA_R_16F,
+					 test.m, test.n, test.k, test.seed);
+		pass &= check_mode<__nv_bfloat16>(handle, "BF16/FP32", CUDA_R_16BF,
+						 test.m, test.n, test.k, test.seed);
+	}
 	blas_check(cublasDestroy(handle), "cublasDestroy");
-	return pass_half && pass_bf16 ? 0 : 1;
+	return pass ? 0 : 1;
 }

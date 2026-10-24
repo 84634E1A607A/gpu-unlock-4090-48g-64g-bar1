@@ -34,3 +34,17 @@ All-one inputs check the exercised arithmetic path but do not validate general
 numeric accuracy or predict application speedup. The
 [RTX 4070 Ti SUPER report](../../docs/ada-2705-report.md) records one matched
 240 W comparison and its limits.
+
+`validate_gemm.cu` is a separate correctness check using cuBLAS and a CPU
+reference. It uses three seeded FP16/BF16 input sets with square, rectangular
+and non-tile-aligned shapes. Inputs vary across both coordinates and use exact
+dyadic values. Run the same built binary on the same GPU in stock and unlocked
+states; these small checks do not establish general application accuracy.
+
+```sh
+nvcc -O3 -arch=sm_89 -std=c++17 -o validate_gemm \
+  diagnostics/bench/validate_gemm.cu -lcublas
+```
+
+`mma_bench.cu` accepts positive iteration and repetition counts. Repetition
+results are stored dynamically, so longer runs do not use a fixed text buffer.

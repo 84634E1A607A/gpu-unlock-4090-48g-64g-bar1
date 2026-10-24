@@ -146,7 +146,9 @@ is not guaranteed to provide that state: it did on the tested
 RTX 4070 Ti SUPER, where the pre-firmware WPR2 readback returned to zero and
 the unlock succeeded again without an AC cut. Other boards may retain WPR2;
 the module refuses to rerun the firmware sequence in that state. It also skips
-cards that are already bound, powered down or bus mastering.
+cards that are already bound or powered down. If board firmware left bus
+mastering enabled, the module clears it and verifies that it stayed cleared;
+the later WPR2 check still rejects an already initialized card.
 Loading the module manually after NVIDIA has bound the card cannot unlock it.
 
 After validating a cold boot and a one-time warm reboot on the exact card, a
@@ -195,10 +197,18 @@ fresh hardware state.
 
 ## Development and credits
 
-`make test` runs the host-side suite without accessing a GPU. With generated
-firmware available, it also exercises complete unlock transactions against mocked
-hardware. `make LLVM=1 -C kernel/gpu_unlock` builds the module with LLVM against
-the running kernel's headers.
+`make test` runs the host-side suite without accessing a GPU. Missing generated
+firmware is reported as an explicit skip of the full transaction tests. After
+`make assets`, use `make test-full` for a strict check that requires both the
+pinned source and all generated assets. Override `ASSETS=` and `NVIDIA_SOURCE=`
+for inputs built elsewhere. These tests mock firmware execution and device
+behavior; they do not replace a hardware repeat.
+
+The kernel verifies each loaded asset against its pinned SHA-256 before claiming
+the card or starting firmware DMA, including files staged into an initramfs.
+The kernel's SHA-256 library (`CONFIG_CRYPTO_LIB_SHA256`) must be available.
+`make -C kernel/gpu_unlock` builds against the running kernel's headers; use
+`LLVM=1` when those headers support a Clang build.
 
 The Linux module and packaging derive from
 [Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock). The AD102 four-PLM
