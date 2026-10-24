@@ -12,9 +12,9 @@ INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
 effectively unchanged (59.326 → 59.495 TF/s).
 
 RTX 4080 `10de:2704` is an experimental target tested on one modified-32-GiB
-card; see the
-[hardware report](docs/rtx4080-hardware-report.md). Other cards, memory
-configurations, and application-level gains remain unverified.
+card; the [hardware report](docs/rtx4080-hardware-report.md) includes a matched
+Qwen prefill comparison. Other cards, memory configurations, boot repeatability,
+and gains on other workloads remain unverified.
 
 ## 1. Find your GPU's PCI address
 

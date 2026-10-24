@@ -9,7 +9,7 @@ enum gpu_unlock_booter_arch {
 
 /* Exact experimental AD103 canary; other Ada PCI IDs are not admitted. */
 #define GU_AD103_RTX_4070_TI_SUPER 0x2705u
-/* Local, exact-card experiment; not upstream hardware validation. */
+/* Experimental AD103 target; validated on one modified 32 GiB card only. */
 #define GU_AD103_RTX_4080 0x2704u
 /* Exact experimental AD106 target, untested on silicon. */
 #define GU_AD106_RTX_4060_TI_16GB 0x2805u

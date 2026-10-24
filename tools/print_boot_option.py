@@ -26,7 +26,8 @@ def main() -> int:
     found = candidates(result.stdout)
     if not found:
         print("No supported RTX 4090 (10de:2684), experimental RTX 4090 D "
-              "(10de:2685), experimental RTX 4070 Ti SUPER (10de:2705) or "
+              "(10de:2685), experimental RTX 4080 (10de:2704), "
+              "experimental RTX 4070 Ti SUPER (10de:2705) or "
               "experimental RTX 4060 Ti 16GB (10de:2805) was found.",
               file=sys.stderr)
         return 2
@@ -34,7 +35,7 @@ def main() -> int:
         options = f"gpu_unlock.targets={address}"
         label = {"2684": "RTX 4090",
                  "2685": "RTX 4090 D (experimental)",
-                 "2704": "RTX 4080 (local experiment)",
+                 "2704": "RTX 4080 (experimental)",
                  "2705": "RTX 4070 Ti SUPER (experimental)",
                  "2805": "RTX 4060 Ti 16GB (experimental)"}[device]
         if device == "2685":

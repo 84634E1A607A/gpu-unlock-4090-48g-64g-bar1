@@ -85,17 +85,18 @@ card**. It uses the same AD102-family payload and requires both
 `gpu_unlock.ad106_experimental=1` and a single exact PCI address; `targets=all`
 never selects it. On the tested card, one cold boot passed every marker,
 permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
-the RM getter's FMLA32, IMLA2 and IMLA4 encodings changed from `1` to `0`. No
+the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
 same-card stock throughput run has been made yet. See the
 [2805 report](docs/ada-2805-report.md).
-
 
 RTX 4080 `10de:2704` is an **experimental AD102-family target validated on one
 modified-32-GiB card**. It requires `gpu_unlock.rtx4080_experimental=1` and one
 exact PCI address; `targets=all` never selects it. The single-card report
 records the guarded trial, driver handoff, unchanged CUDA GEMM outputs, and
-synthetic GEMM timings. Other cards and memory configurations, boot
-repeatability, and application-level gains remain unverified. See the
+synthetic GEMM timings. A matched Qwen 27B prefill comparison measured
+19.9–26.9% higher throughput at approximately 4K, 16K and 64K input tokens.
+Other cards and memory configurations, boot repeatability, and gains on other
+workloads remain unverified. See the
 [RTX 4080 hardware report](docs/rtx4080-hardware-report.md).
 
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
