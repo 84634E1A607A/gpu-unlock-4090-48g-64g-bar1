@@ -1,5 +1,9 @@
 # RTX 4090 evidence excerpts
 
+These are the original experiment's excerpts. The later [independent run of
+reviewed revision `8855e7b`](../rtx4090-pr1-matched/README.md) adds module
+execution, numerical checks and matched GEMMs; the scope below remains historical.
+
 These files support the [RTX 4090 experiment report](../../../rtx4090-register-report.md).
 The successful firmware transaction was measured on 2026-10-23, using one
 RTX 4090 and one successful cold power-on. The implementation preceded the

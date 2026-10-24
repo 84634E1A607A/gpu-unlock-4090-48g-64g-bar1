@@ -1,5 +1,9 @@
 # Stock RTX 4090 baseline for PR #1
 
+This is the archived LTS stock-only run. A later [matched stock/unlocked
+comparison](../rtx4090-pr1-matched/README.md) uses regular Linux `7.2.11-arch1-1`
+for both states. Do not compare these LTS timings against that unlocked run.
+
 These measurements were collected on one owner-controlled RTX 4090 on
 2026-10-24 UTC, using the tools at commit `8855e7b`, NVIDIA `615.78.08`,
 Linux `6.18.57-2-lts`, CUDA `13.4.92`, and the existing 450 W power cap.
@@ -44,7 +48,8 @@ absolute error. `numerical.txt` preserves that output except for the PCI address
 The GNOME desktop remained active. This session did not change clocks or power
 limits. Active telemetry ranged from 2,535 to 2,655 MHz SM clock and 61–76 °C;
 the largest observed sampled power was 303.82 W. Clock, temperature and desktop
-variation can affect timing, and matched unlocked measurements remain pending.
+variation can affect timing. This archived run has no matched unlocked
+measurement; use the linked regular-kernel report for the paired comparison.
 
 `metadata.json` records the settings, rate getter values, telemetry summary and
 source/binary hashes. GPU UUID, PCI location, host paths and boot ID are omitted.

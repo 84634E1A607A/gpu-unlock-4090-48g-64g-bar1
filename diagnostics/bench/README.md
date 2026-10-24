@@ -48,3 +48,8 @@ nvcc -O3 -arch=sm_89 -std=c++17 -o validate_gemm \
 
 `mma_bench.cu` accepts positive iteration and repetition counts. Repetition
 results are stored dynamically, so longer runs do not use a fixed text buffer.
+
+The [testing guide](../../docs/testing.md) gives a stock/unlocked collection
+workflow, including the separate large cuBLAS GEMM probe. The
+[matched RTX 4090 evidence](../../docs/evidence/rtx4090-pr1-matched/README.md)
+records both improved and unchanged cases, numerical checks and telemetry.

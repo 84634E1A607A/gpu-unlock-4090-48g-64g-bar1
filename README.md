@@ -13,12 +13,20 @@ approximately **2× FP16 and BF16 tensor throughput with FP32 accumulation**:
 
 The override survived PCIe Function Level Reset (FLR), stock NVIDIA `615.78.08`
 initialization and CUDA benchmarks. INT8, `dp4a` and scalar FP32 stayed near their
-baseline rates. This is one tested RTX 4090 and one successful cold power-on;
-independent cold-boot reproduction and application numerical validation remain
-pending. The measured firmware transaction preceded the repository cleanup;
-the cleaned module has host-side validation and still needs that hardware repeat.
-See the [technical report](rtx4090-register-report.md) and
-[sanitized evidence](docs/evidence/rtx4090/README.md).
+baseline rates. The original transaction preceded the repository cleanup; see
+the [technical report](rtx4090-register-report.md) and
+[original evidence](docs/evidence/rtx4090/README.md).
+
+An independent owner run of revision `8855e7b` also completed the RTX 4090
+transaction and NVIDIA driver handoff on Linux `7.2.11-arch1-1`. Matched
+stock/unlocked measurements with NVIDIA `615.78.08` and the same 450 W cap
+found FP16/FP32 instruction throughput **160.4 → 320.4 TF/s** and BF16/FP32
+**159.7 → 320.2 TF/s**. All exercised numerical checks passed. Real cuBLAS
+GEMM median throughput varied by shape: FP16 gained 12–34%, BF16 gained
+16–20% at two shapes and was essentially unchanged at 4096³. These are one
+matched run pair with the desktop active, not whole-application speedups or
+an extended stability test. See the [matched evidence and limits](docs/evidence/rtx4090-pr1-matched/README.md)
+and [testing workflow](docs/testing.md).
 
 A separate cold test of the Ada port on one RTX 4070 Ti SUPER
 (`10de:2705`) with NVIDIA `580.178.04` measured FP16/FP32 tensor issue rate
@@ -203,6 +211,8 @@ firmware is reported as an explicit skip of the full transaction tests. After
 pinned source and all generated assets. Override `ASSETS=` and `NVIDIA_SOURCE=`
 for inputs built elsewhere. These tests mock firmware execution and device
 behavior; they do not replace a hardware repeat.
+See [testing and interpreting results](docs/testing.md) for the validation
+levels, matched benchmark commands and recorded hardware evidence.
 
 The kernel verifies each loaded asset against its pinned SHA-256 before claiming
 the card or starting firmware DMA, including files staged into an initramfs.
