@@ -75,6 +75,7 @@ static const struct gpu_unlock_assets *unlock_assets(const struct pci_dev *pdev)
 	};
 
 	return (pdev->device == GU_AD102_RTX_4090 ||
+		pdev->device == GU_AD102_RTX_4090_D ||
 		pdev->device == GU_AD103_RTX_4070_TI_SUPER) ? &ad102 : &ga102;
 }
 
@@ -347,6 +348,7 @@ static bool is_ad102(const struct unlock_transaction_work *work)
 	/* AD103 uses the same pinned AD102-family Booter archive. Hardware
 	 * behavior on 0x2705 still requires an exact-card canary. */
 	return work->pdev->device == GU_AD102_RTX_4090 ||
+	       work->pdev->device == GU_AD102_RTX_4090_D ||
 	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER;
 }
 
