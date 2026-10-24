@@ -1,104 +1,87 @@
-# GPU unlock 1.1.1 — RTX 4090 and experimental Ada GPUs
+# RTX 4090 — 64 GiB BAR1
 
-New to this project? Start with the [copy-paste Quick Start](QUICKSTART.md).
+This fork enables a **64 GiB PCIe BAR1 aperture** on selected RTX 4090 cards
+(`10de:2684`, AD102), before the NVIDIA driver starts. It has been validated on
+eight RTX 4090 cards with 48 GiB of physical VRAM.
 
-This Linux kernel module enables the SM speed-select override before the stock
-NVIDIA driver starts. RTX 4090 (`10de:2684`, AD102) support has demonstrated
-approximately **2× FP16 and BF16 tensor throughput with FP32 accumulation**:
+BAR1 is the PCIe address window used to map GPU memory. Increasing it to 64 GiB
+allows the 48 GiB framebuffer to fit within the aperture; physical VRAM capacity
+stays the same. The existing Tensor Core FP32-accumulate unlock is retained.
 
-| Mode | Before | After |
-|---|---:|---:|
-| FP16 → FP32 accumulate | 165.6 TF/s | 331.6 TF/s |
-| BF16 → FP32 accumulate | 165.5 TF/s | 330.6 TF/s |
+See the [BAR1 implementation and validation report](docs/bar1-64g-report.md)
+for the register changes, allocation layout and application results.
 
-The override survived PCIe Function Level Reset (FLR), stock NVIDIA `615.78.08`
-initialization and CUDA benchmarks. INT8, `dp4a` and scalar FP32 stayed near their
-baseline rates. The original transaction preceded the repository cleanup; see
-the [technical report](rtx4090-register-report.md) and
-[original evidence](docs/evidence/rtx4090/README.md).
+## What changes
 
-An independent owner run of revision `8855e7b` also completed the RTX 4090
-transaction and NVIDIA driver handoff on Linux `7.2.11-arch1-1`. Matched
-stock/unlocked measurements with NVIDIA `615.78.08` and the same 450 W cap
-found FP16/FP32 instruction throughput **160.4 → 320.4 TF/s** and BF16/FP32
-**159.7 → 320.2 TF/s**. All exercised numerical checks passed. Real cuBLAS
-GEMM median throughput varied by shape: FP16 gained 12–34%, BF16 gained
-16–20% at two shapes and was essentially unchanged at 4096³. These are one
-matched run pair with the desktop active, not whole-application speedups or
-an extended stability test. See the [matched evidence and limits](docs/evidence/rtx4090-pr1-matched/README.md)
-and [testing workflow](docs/testing.md).
+There are two separate steps:
 
-A modified 48 GB RTX 4090 (`10de:2684`, AD102) on Ubuntu 26.04 with Linux
-`7.0.0-38-generic` and NVIDIA `610.57.04` open kernel modules also completed the
-transaction and driver handoff on 2026-10-25: `fmla32` went from `1` to `0`,
-FP16/FP32 instruction throughput **164.9 → 328.9 TF/s**, BF16/FP32
-**164.8 → 328.7 TF/s**, with INT8, `dp4a` and scalar unchanged and no Xid. A
-quantized mixture-of-experts serving workload on the same card showed **no**
-gain (8K prefill 0.983×), which is consistent with quantized matmuls not
-consuming the FP32-accumulate tensor path. That is one card, one cold boot and
-one workload. See the [modified-card evidence and limits](docs/evidence/rtx4090-48g-modded/README.md).
-Further matched owner reproductions used NVIDIA [610.57.04](docs/evidence/rtx4090-610.57.04/README.md)
-and [595.91.07](docs/evidence/rtx4090-595.91.07/README.md).
+1. **Expose the GPU capability.** The existing SEC2 high-privilege payload writes
+   CYA (`0x88724 = 0x30`) and CFG (`0x88dcc = 0x8000000a`), then opens XVE and
+   FEAT. The module checks the payload marker, SEC2 HALT and register readbacks,
+   performs Function Level Reset (FLR), and verifies that 64 GiB support survives.
+   Host-side CYA/CFG writes alone were ignored on the tested cards.
+2. **Allocate the address space.** Linux must assign a 64 GiB BAR1 resource and
+   the upstream PCIe bridges must route it. Advertising 64 GiB support alone
+   does not resize those resources. A separate, topology-specific helper handles
+   bridge packing where the normal resize path returns `ENOSPC`.
 
-A separate cold test of the Ada port on one RTX 4070 Ti SUPER
-(`10de:2705`) with NVIDIA `580.178.04` measured FP16/FP32 tensor issue rate
-at **95.0 → 189.9 TF/s** and BF16/FP32 at **95.0 → 189.7 TF/s** under the
-same 240 W power cap. INT8 stayed at 379.5 TOP/s. The stock driver loaded,
-the NVIDIA RM getter reported full FMLA32 rate, deterministic FP16/BF16 GEMM
-outputs matched exactly, and owner mining recovered with fresh accepted shares.
-A second matched instruction benchmark found **TF32/FP32 47.49 → 94.51 TF/s**
-(1.99×), with its FP16/FP32 control also near 2×. Unsigned INT4/INT32 stayed
-at approximately **754.8 TOP/s** in both states. These are register-resident
-issue rates, not application GEMM or inference speedups.
-A matched, verified E4M3 FP8/FP32 CUTLASS GEMM measured **59.326 TF/s stock →
-59.495 TF/s unlocked** on this card, a 0.3% difference. That kernel reaches only
-about 17% of this card's FP8 peak, so it cannot resolve an issue-rate change.
-Other measurements do put FP8 in the affected group: an 8192³ E4M3 GEMM on a
-Windows RTX 4080 SUPER measured **199.4 → 310.4 TF/s (+55.7%)** and
-**199.4 → 298.7 TF/s (+49.8%)** in two runs (see
-[goldlionren/gpu-unlock-4080s](https://github.com/Goldlionren/gpu-unlock-4080s);
-its author flags FP8 variance and keeps FP8 out of that repo's own pass/fail
-gate), and register-resident E4M3 probes read **603.1 TF/s** unlocked on the
-modified 48 GB RTX 4090 (see [that evidence directory](docs/evidence/rtx4090-48g-modded/README.md))
-and **165.45 → 323.95 TF/s (1.96×)** on a Windows RTX 4070 Ti SUPER (see
-[A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock](https://github.com/A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock)).
-The 4090 figure is 91% of its 660.6 TF/s full FP8 rate; NVIDIA rates a stock
-RTX 4090 at 330.3 TF/s for FP8 with FP32 accumulate and 660.6 with FP16
-accumulate.
-So FP8 does move at the issue-rate level; a matched AD103 pair is 1.96×. At a
-fixed power limit the application GEMM stays below that: an
-unlocked RTX 4090 peaked at 346 W against 313 W stock and spent both MMA and
-GEMM passes under SW Power Cap (see
-[the 610.57.04 evidence](docs/evidence/rtx4090-610.57.04/README.md)).
-This is one card; the unlock succeeded on two cold boots and two ordinary
-warm reboots, the last from a persistent EFI default. Throughput was measured
-on the first cold boot. See the [2705 canary report](docs/ada-2705-report.md)
-and its [sanitized raw benchmark output](docs/evidence/ada2705/README.md).
+```mermaid
+flowchart TD
+    A["Early boot: NVIDIA remains unbound"] --> B["SEC2 payload writes CYA / CFG"]
+    B --> C["Verify 64 GiB capability and tensor selectors"]
+    C --> D["FLR, then verify capability again"]
+    D -->|Pass| E["Allocate bridge windows, BAR1 and BAR3"]
+    D -->|Fail| H["Keep GPUs unbound for recovery"]
+    E --> F{"All eight BAR1 resources are 64 GiB?"}
+    F -->|Yes| G["Allow NVIDIA to bind, then start the workload"]
+    F -->|No| H
+```
 
-The AD102 payload and its debug-booter analysis come from
-**[TOTORONG/AD103_win_unlocker](https://huggingface.co/TOTORONG/AD103_win_unlocker)**.
-This fork integrates that published payload into
-**[Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock)**'s Linux module,
-firmware generation and boot packaging. The payload is essential to the result.
+These changes do not require PCIe link retraining, a VBIOS flash or an additional
+BAR1 patch to the NVIDIA driver. The early-boot sequence reapplies the settings
+on subsequent boots.
 
-## Experimental Windows contribution — Latence.app
+## Verified results
 
-A separate [MSI RTX 4070 Ti AD104 Windows UEFI reference port](windows/ad104-msi/README.md)
-records one successful manual boot with NVIDIA 616.56 and matched cuBLAS FP16/FP32
-**+80.1%**, BF16/FP32 **+76.4%** measurements. It is tied to one captured MSI Z490
-profile; it does **not** add AD104 admission to the Linux module. See the
-[report and limitations](docs/ad104-windows-latence-app.md). No firmware/Windows/ROM
-binaries or automatic boot installer are distributed. Contribution by **Latence.app**;
-original upstream credits and licences are retained.
+The eight-card test used Linux `7.0.0-38-generic` and NVIDIA open P2P `615.71.09`.
 
-## Supported targets
+| Check | Result |
+| --- | --- |
+| Advertised BAR1 maximum | 32 GiB → 64 GiB |
+| Linux-assigned BAR1 | 64 GiB on all eight GPUs |
+| NVIDIA BAR1 total | 65536 MiB on all eight GPUs |
+| BAR1 actually used under load | Approximately 46.8 GiB per GPU |
+| Ordinary reboot from the default boot entry | Eight-card configuration restored |
+| DeepSeek TP8 vLLM acceptance | Both request sets completed 32/32, zero failures |
+| Workload recovery after reboot | Container restarted automatically; local and external chat passed |
 
-The module selects the AD102 firmware and payload automatically for RTX 4090
-`10de:2684`. The original GeForce/CMP GA102/GA104 device list and GA102 payload
-are retained, along with the newer GA103/GA106 device list. Upstream reported
-RTX 3090 success; this branch does not revalidate every legacy board.
-GA107 RTX 3050 6GB (`10de:2584`) uses the same GA102 Booter path and was
-unlocked on one card ([2584 report](docs/ga107-2584-report.md)).
+The vLLM checks used 512/128 and 4096/256 input/output token workloads with client
+concurrency 8. These are functional acceptance results; no matched 32 GiB BAR1
+performance comparison was run. The Tensor Core selectors also passed their
+post-FLR checks; isolated tensor throughput was not remeasured in this test.
+
+## Scope
+
+The BAR1 payload is selected only for RTX 4090 `10de:2684`. Other GPU IDs retain
+their existing payloads. Enabling the module still requires an explicit target
+selection; the BAR1 option defaults to on only for selected RTX 4090 cards.
+
+The optional bridge-layout helper under [tools/](tools/) was validated for a
+specific four-GPU switch topology. It assigns a 128 GiB window per populated
+port to fit an aligned 64 GiB BAR1 and BAR3, with a 576 GiB upstream window per
+four-card group. **Adapt its topology checks and boot integration before using
+it on another system.** It is separate from the general module packages.
+
+The upstream GA10x tensor-unlock support, including the
+[GA107 RTX 3050 6GB path](docs/ga107-2584-report.md), and explicitly gated
+experimental Ada targets remain available. They do not gain this BAR1 modification.
+Tensor measurements are documented in the
+[RTX 4090 report](rtx4090-register-report.md),
+[matched RTX 4090 evidence](docs/evidence/rtx4090-pr1-matched/README.md) and
+[RTX 4070 Ti SUPER report](docs/ada-2705-report.md).
+
+<details>
+<summary>Upstream experimental tensor-unlock targets</summary>
 
 ### Experimental Ada targets
 
@@ -133,27 +116,28 @@ handling, so a result on one model does not carry over to another. Other Ada
 IDs, professional RTX A-series and data-centre parts are not accepted. Shared
 firmware across Ada chips does not establish support for untested cards.
 
-The RTX 4090 path runs the signed firmware, checks the payload's completion marker and
-required permissions, writes SS0 `0x88888888` and SS1 `0x8`, then performs FLR
-before the unmodified NVIDIA driver binds. It requires the expected
-effective speed-select readout before and after FLR. No patched NVIDIA driver or UEFI
-application is needed. The payload uses instruction addresses derived from
-published decrypted debug-booter analysis; the production booter is authenticated
-and decrypted inside the GPU.
+</details>
+
+## Related reading
+
+- [64 GiB BAR1 on RTX 4090 48G](http://aajax.top/2026/10/25/64GigabyteBAR1on409048G/)
+  — companion write-up, in preparation.
+- [给 48G 魔改 4090 解锁 PCIe P2P：动态 BAR1 映射的实现](https://duanyll.com/2026/7/13/4090-48G-P2P/)
+  — background on the 32 GiB aperture limit and prior work on per-allocation
+  dynamic BAR1 mappings in the driver.
 
 ## Build and install
 
-Clone the GPL-2.0-only source and build the packages locally so the pinned
-NVIDIA firmware is downloaded and generated on your own machine:
+Build the GPL-2.0-only source locally so the pinned NVIDIA inputs are downloaded,
+verified and converted into firmware assets on your machine:
 
 ```sh
-git clone https://github.com/JustAResearcher/gpu-unlock-ada.git
-cd gpu-unlock-ada
+git clone https://github.com/84634E1A607A/gpu-unlock-4090-48g-64g-bar1.git
+cd gpu-unlock-4090-48g-64g-bar1
 make install
 ```
 
-`make install` detects the supported distribution family. Its explicit targets
-are:
+`make install` detects the supported distribution family. Explicit targets are:
 
 ```sh
 make install-arch   # makepkg -sif
@@ -161,149 +145,113 @@ make install-deb    # apt-get build-dep, dpkg-buildpackage, apt-get install
 make install-rpm    # dnf builddep, rpmbuild, dnf install
 ```
 
-`make arch`, `make deb` and `make rpm` build without installing. Packages are
-built from the committed `HEAD`; Debian and RPM outputs go to `build/deb` and
-`build/rpm`. Kernel headers and a working DKMS toolchain are required.
+`make arch`, `make deb` and `make rpm` build without installing. Packages use the
+committed `HEAD`; Debian and RPM outputs go to `build/deb` and `build/rpm`.
+Kernel headers and a working DKMS toolchain are required.
 
-Builds fetch the pinned NVIDIA `610.43.03` source and binary inputs over HTTPS
-and verify their SHA-256 hashes. `make inputs` prepares the cache;
-`make firmware` generates assets from cached inputs; `make assets` does both.
-The default cache is `$HOME/.cache/gpu-unlock` and can be overridden with
-`CACHE=`, `INPUTS=` and `ASSETS=`. A clean-chroot Debian build needs
-`GPU_UNLOCK_INPUTS` pointing to the input cache because `dpkg-buildpackage`
-does not fetch inputs itself.
+Builds verify the SHA-256 hashes of the pinned NVIDIA `610.43.03` inputs.
+`make inputs` prepares the cache, `make firmware` generates assets from cached
+inputs, and `make assets` does both. The default cache is
+`$HOME/.cache/gpu-unlock`; override it with `CACHE=`, `INPUTS=` or `ASSETS=`.
+Clean-chroot Debian builds require `GPU_UNLOCK_INPUTS` to point to that cache.
 
-The source archive produced by `make dist`, the Debian source package and the
-`.nosrc.rpm` contain no NVIDIA archives or generated firmware. See
-[firmware/README.md](firmware/README.md) for the input and asset layout.
-Prebuilt firmware packages are not distributed by this repository.
+Source archives contain no NVIDIA archives or generated firmware. See
+[firmware/README.md](firmware/README.md) for asset generation and
+[QUICKSTART.md](QUICKSTART.md) for the underlying module build workflow.
 
 ## Enable at boot
 
-The package installs the module and firmware into the initramfs so the unlock
-runs before NVIDIA binds the card. It remains inactive unless the kernel
-command line opts in:
+The module and firmware must be present in the initramfs and execute before
+NVIDIA binds the selected cards. Select targets through the kernel command line:
 
 ```text
 gpu_unlock.targets=0000:03:00.0
-gpu_unlock.targets=0000:03:00.0,0000:04:00.0
 gpu_unlock.targets=all
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
 ```
 
-These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
-`all` selects every accepted unbound card, including legacy GA102/GA104 targets;
-an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. Every experimental Ada target requires its own flag from the
-[experimental target table](#experimental-ada-targets), and the exact ones must
-be named by their exact PCI address; `all` never selects them. Invalid entries
-are logged and ignored.
+The PCI address is an example; use the full address reported by `lspci -D`.
+`all` also selects accepted legacy GA10x cards. Experimental Ada targets require
+their opt-in flag from the [table above](#experimental-ada-targets). IDs marked
+*exact* must be listed by PCI address, alone or in a comma-separated list;
+`all` never selects those IDs.
 
-Selected RTX 4090 cards open a maximum 64 GiB BAR1 by default.
-`gpu_unlock.bar1_64g=0` selects the original tensor-only payload. Other GPU IDs
-keep their existing payload. The BAR1 variant writes CYA/CFG through the existing
-SEC2 chain, opens XVE and FEAT, and verifies the capability before and after FLR.
-A 64 GiB capability alone does not mean Linux assigned a 64 GiB BAR: bridge
-windows must also accommodate it. See the [BAR1 report](docs/bar1-64g-report.md)
-for measured results and the separate topology-specific resource-layout helper.
+For selected RTX 4090 cards, `gpu_unlock.bar1_64g=1` is the default.
+`gpu_unlock.bar1_64g=0` selects the original tensor-only payload.
 
-The packages support these initramfs generators:
+General packages provide these initramfs integrations:
 
-- **mkinitcpio:** `/etc/mkinitcpio.conf.d/zz-gpu-unlock.conf` puts `gpu_unlock`
-  immediately before `nvidia` in `MODULES`, or last if NVIDIA is absent. Images
-  are rebuilt on installation. A custom configuration selected with `-c` or a
-  preset `_config` does not read drop-ins; add `gpu_unlock` before `nvidia` in
-  that configuration's `MODULES` yourself.
-- **initramfs-tools:**
-  `/usr/share/initramfs-tools/modules.d/gpu-unlock.conf`.
+- **mkinitcpio:** `/etc/mkinitcpio.conf.d/zz-gpu-unlock.conf` places `gpu_unlock`
+  before `nvidia`. Custom configurations selected with `-c` or a preset require
+  the same ordering explicitly.
+- **initramfs-tools:** `/usr/share/initramfs-tools/modules.d/gpu-unlock.conf`.
 - **dracut:** `/usr/lib/dracut/dracut.conf.d/gpu-unlock.conf`.
 
-There is no `softdep nvidia pre:` rule because kmod uses only the first matching
-soft dependency line, which can conflict with other packages.
+For the validated eight-card layout, a separate early-boot script holds the
+GPUs unbound, waits for all unlock transactions, assigns both groups of bridge
+resources, and releases the cards only when all eight BAR1 resources are 64 GiB.
+The general package install does not configure this topology-specific step.
+See the [BAR1 report](docs/bar1-64g-report.md) for that deployment sequence.
 
-**Power the machine off and start it again for the first attempt.** The module
-needs a card whose firmware state is fresh before NVIDIA loads. A warm reboot
-is not guaranteed to provide that state: it did on the tested
-RTX 4070 Ti SUPER, where the pre-firmware WPR2 readback returned to zero and
-the unlock succeeded again without an AC cut. The tested eight-card RTX 4090 system also passed an ordinary reboot from the persistent 64 GiB BAR1
-default; see the [BAR1 report](docs/bar1-64g-report.md). Other boards may retain WPR2;
-the module refuses to rerun the firmware sequence in that state. It also skips
-cards that are already bound or powered down. If board firmware left bus
-mastering enabled, the module clears it and verifies that it stayed cleared;
-the later WPR2 check still rejects an already initialized card.
-Loading the module manually after NVIDIA has bound the card cannot unlock it.
+Use a cold power-on for the first attempt. Ordinary reboot worked on the tested
+eight-card system, but other boards may retain initialized firmware state.
+The module refuses to rerun when WPR2 is already enabled and skips cards that
+are bound or powered down. If board firmware left bus mastering enabled, the
+module clears it and verifies that it stayed cleared. Loading it after NVIDIA
+binds cannot perform the unlock.
 
-After validating a cold boot and a one-time warm reboot on the exact card, a
-persistent bootloader entry can select the same early initramfs and exact
-`gpu_unlock.*` options on every boot. A one-shot entry by itself does not
-persist. Keep an unmodified stock entry available, and verify
-`gpu_unlock: unlocked`, the rate readback and GPU health after each boot.
-The tested canary uses a kernel-version-specific image; regenerate and
-revalidate that image before removing its pinned kernel during an upgrade.
-
-Avoid `nvidia-smi`, CUDA, NVML and `nvidia-modprobe` before a manual cold-card
-attempt: they can load NVIDIA by name. Ordinary modprobe blacklist rules do not
-block explicit named loads. The packaged initramfs flow avoids the need for
-manual firmware staging and research parameters.
-
-The original display-card handoff is retained: the firmware framebuffer is
-removed just before FLR, and the display stays blank until `nvidia-drm` takes
-over. Display handoff and multi-card operation were not part of the RTX 4090
-validation.
+After validating both initial boot and ordinary reboot, make the tested
+bootloader entry persistent. Keep an original system entry available. Custom
+kernel-version-specific initrds must be rebuilt and revalidated when upgrading
+their kernel. Display handoff was not part of the BAR1 acceptance test.
 
 ## Check and disable
 
-Inspect the kernel log after boot:
+Check each of these independently:
+
+1. Kernel logs show `gpu_unlock: unlocked` and successful post-FLR checks.
+2. The supported-size mask includes 64 GiB, and the Linux BAR1 resource is
+   actually 68719476736 bytes.
+3. `nvidia-smi -q -d MEMORY` reports BAR1 total of 65536 MiB for every selected GPU.
+4. The real workload runs without GPU or PCIe errors.
 
 ```sh
-journalctl -k -b | grep gpu_unlock
-lspci -nnk -s 0000:03:00.0  # replace the example address
+journalctl -k -b | grep -E 'gpu_unlock|BAR1'
+lspci -vv -s 0000:03:00.0  # replace the example address
+nvidia-smi -q -d MEMORY
 ```
 
-A loaded module or successful `modprobe` return alone does not prove an unlock:
-look for the selected card's `gpu_unlock: unlocked` message and the payload,
-selector and post-FLR checks. The report describes independent register and
-performance confirmation. The optional read-only sampler lives in
-`diagnostics/peek`; the CUDA instruction benchmark is in `diagnostics/bench`.
-Never load a second BAR0 sampler while `gpu_unlock` is performing its firmware
-transaction.
+A loaded module or an advertised 64 GiB maximum alone does not establish that
+the driver received a usable 64 GiB mapping.
 
-If the module reports that firmware did not stop and its DMA buffers are being
-kept, power off before trying again. The module intentionally retains buffers
-that firmware may still use. Do not force-unload it in this state.
-
-Remove `gpu_unlock.targets=` from the kernel command line to disable future
-attempts. It can be removed for one boot in the bootloader editor. Removing the
-packages removes the module and initramfs integration; power off to return to a
-fresh hardware state.
+Remove `gpu_unlock.targets=` to disable future unlock attempts. On a dedicated
+64 GiB boot image that requires all eight cards to pass, use the original system
+entry for rollback; changing only `bar1_64g=0` will not satisfy that image's guard.
+Power off to restore fresh hardware state. If the module reports retained DMA
+buffers because firmware did not stop, power off before retrying and do not
+force-unload the module.
 
 ## Development and credits
 
-`make test` runs the host-side suite without accessing a GPU. Missing generated
-firmware is reported as an explicit skip of the full transaction tests. After
-`make assets`, use `make test-full` for a strict check that requires both the
-pinned source and all generated assets. Override `ASSETS=` and `NVIDIA_SOURCE=`
-for inputs built elsewhere. These tests mock firmware execution and device
-behavior; they do not replace a hardware repeat.
-See [testing and interpreting results](docs/testing.md) for the validation
-levels, matched benchmark commands and recorded hardware evidence.
-
+`make test` runs host-side tests without accessing a GPU. With generated firmware,
+it also exercises full transactions against mocked hardware. Missing firmware or
+source coverage is reported as skipped; `make test-full` requires the pinned inputs.
+See the [testing guide](docs/testing.md) for full host validation and hardware checks.
 The kernel verifies each loaded asset against its pinned SHA-256 before claiming
-the card or starting firmware DMA, including files staged into an initramfs.
+the card or starting firmware DMA, including assets staged into an initramfs.
 The kernel's SHA-256 library (`CONFIG_CRYPTO_LIB_SHA256`) must be available.
-`make -C kernel/gpu_unlock` builds against the running kernel's headers; use
-`LLVM=1` when those headers support a Clang build.
+`make LLVM=1 -C kernel/gpu_unlock` builds with LLVM against the running kernel's
+headers.
 
 The Linux module and packaging derive from
-[Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock). The AD102 four-PLM
-payload derives from
+[Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock). The AD102 payload and
+published debug-booter analysis derive from
 [TOTORONG/AD103_win_unlocker](https://huggingface.co/TOTORONG/AD103_win_unlocker),
-including its published payload generator and debug-booter analysis. The GA102
-V67 chain derives from
+integrated by [JustAResearcher/gpu-unlock-ada](https://github.com/JustAResearcher/gpu-unlock-ada).
+The BAR1 variant reuses that chain with the four write arguments documented in
+the [BAR1 report](docs/bar1-64g-report.md). The GA102 V67 chain derives from
 [WildFlash1st/cmp90hx-unlock](https://github.com/WildFlash1st/cmp90hx-unlock).
-The earlier CMP unlock work, NVIDIA's published loader code, Nouveau and
-[envytools](https://github.com/envytools/envytools) also underpin the loader and
-investigation.
+NVIDIA's published loader code, Nouveau and
+[envytools](https://github.com/envytools/envytools) also underpin the loader.
 
 The kernel module, packaging and payload integration are GPL-2.0-only. NVIDIA
 firmware remains under its own terms. See [firmware/NOTICE.md](firmware/NOTICE.md)
