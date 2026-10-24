@@ -76,6 +76,7 @@ static const struct gpu_unlock_assets *unlock_assets(const struct pci_dev *pdev)
 
 	return (pdev->device == GU_AD102_RTX_4090 ||
 		pdev->device == GU_AD102_RTX_4090_D ||
+		pdev->device == GU_AD103_RTX_4080 ||
 		pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
 		pdev->device == GU_AD106_RTX_4060_TI_16GB) ? &ad102 : &ga102;
 }
@@ -350,6 +351,7 @@ static bool is_ad102(const struct unlock_transaction_work *work)
 	 * 0x2705 has one exact-card canary; 0x2805 is untested on silicon. */
 	return work->pdev->device == GU_AD102_RTX_4090 ||
 	       work->pdev->device == GU_AD102_RTX_4090_D ||
+	       work->pdev->device == GU_AD103_RTX_4080 ||
 	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
 	       work->pdev->device == GU_AD106_RTX_4060_TI_16GB;
 }

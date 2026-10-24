@@ -12,6 +12,10 @@ static char *targets;
 module_param(targets, charp, 0444);
 MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 and AD106 require an exact single address");
 
+static bool rtx4080_experimental;
+module_param(rtx4080_experimental, bool, 0444);
+MODULE_PARM_DESC(rtx4080_experimental, "permit only experimental RTX 4080 10de:2704 with one exact PCI target");
+
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
 MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
@@ -52,6 +56,8 @@ static bool supported(const struct pci_dev *pdev)
 {
 	unsigned int i;
 
+	if (pdev->device == GU_AD103_RTX_4080)
+		return rtx4080_experimental;
 	if (pdev->device == GU_AD103_RTX_4070_TI_SUPER)
 		return ad103_experimental;
 	if (pdev->device == GU_AD102_RTX_4090_D)
@@ -137,6 +143,11 @@ static int __init gpu_unlock_init(void)
 	if (!all)
 		report_unmatched();
 	while ((pdev = next_supported(pdev))) {
+		if (pdev->device == GU_AD103_RTX_4080 &&
+		    (all || strcasecmp(targets, pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental RTX 4080 requires a single exact PCI target\n");
+			continue;
+		}
 		if (pdev->device == GU_AD103_RTX_4070_TI_SUPER &&
 		    (all || strcasecmp(targets, pci_name(pdev)))) {
 			pci_err(pdev, "gpu_unlock: experimental AD103 requires a single exact PCI target\n");
@@ -173,4 +184,4 @@ module_init(gpu_unlock_init);
 module_exit(gpu_unlock_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070 Ti SUPER and supported GA10x pre-driver tensor unlock");
-MODULE_VERSION("1.1.1");
+MODULE_VERSION("1.1.1+rtx4080.1");
