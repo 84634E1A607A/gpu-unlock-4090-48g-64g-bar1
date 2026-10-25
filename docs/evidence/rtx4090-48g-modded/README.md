@@ -48,6 +48,21 @@ FP16 8192³ gains less than FP16 4096³, which is consistent with a memory-bandw
 shape. BF16 4096³ is the one case that did not improve, reproducing at 155.0 and 157.4 TF/s in two
 separate runs while FP16 4096³ reached 215-216 TF/s; no explanation is claimed here.
 
+## FP8 (E4M3)
+
+`mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32`, issued from registers with eight independent
+accumulator chains, measures **603.1 TF/s** (five repetitions, 602.7-603.1) on the unlocked card:
+91% of the 660.6 TF/s nominal FP8 rate for this GPU and 1.82x the same-session FP16/FP32-accumulate
+rate. The instruction is validated before timing: with all-ones E4M3 inputs every output element must
+equal k=32, which it does. Source and raw output: [fp8-mma-bench.cu](fp8-mma-bench.cu),
+[fp8-mma.txt](fp8-mma.txt).
+
+This is an issue-rate probe, not a stock/unlocked pair -- the same probe was not run on a locked boot,
+so no FP8 gain is claimed. It does show FP8 sitting at its nominal rate, and it covers a case this
+repository lists as untested ("other FP8 kernels remain untested"). The existing matched CUTLASS FP8
+result on AD103 (59.3 -> 59.5 TF/s) reached about 17% of that card's FP8 peak, so it could not have
+resolved an issue-rate change either.
+
 ## Card safety, and the abort paths
 
 - The transaction completed with `full=1`, `valid=1` on every AD102 permission readback before the

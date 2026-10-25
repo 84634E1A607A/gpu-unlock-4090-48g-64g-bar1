@@ -131,6 +131,8 @@
       "note": "Four consecutive matrix passes on a freshly started engine; the first pass is retained separately because a cold engine is measurably slower. Medians use passes 2-4."
     }
   },
+  "fp8_e4m3_to_f32_TF_s": 603.1,
+  "fp8_note": "Issue-rate probe (mma.sync m16n8k32 e4m3) on the unlocked boot: 603.1 TF/s, 91% of the 660.6 TF/s nominal FP8 rate and 1.82x the same-session FP16/FP32-accumulate rate. No locked-boot run of this probe, so no stock/unlocked ratio is claimed.",
   "model_quantization_mix": {
     "source": "model-quantization.json",
     "files": [
