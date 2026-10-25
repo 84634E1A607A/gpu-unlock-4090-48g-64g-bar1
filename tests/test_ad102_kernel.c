@@ -204,10 +204,11 @@ int main(int argc, char **argv)
         assert(!fake.live && !fake.fw_live && dev.refs==1);
         puts("AD104 0x2786 profile dispatch under mocked registers PASS");
         }
-        {
+        const unsigned short ad106_ids[]={GU_AD106_RTX_4060_TI_16GB,GU_AD106_RTX_4060_TI};
+        for(unsigned i=0;i<ARRAY_SIZE(ad106_ids);i++) {
         /* Dispatch the same published AD102-family payload through the exact
-         * 0x2805 profile under mocked registers. This is not silicon proof. */
-        ad102_setup(&w);dev.device=GU_AD106_RTX_4060_TI_16GB;load_rom(argv[1]);
+         * 0x2805 and 0x2803 profiles under mocked registers. This is not silicon proof. */
+        ad102_setup(&w);dev.device=ad106_ids[i];load_rom(argv[1]);
         regs[0x1183a4/4]=0x5ff4;regs[0x625f04/4]=1;regs[0x1fa7c8/4]=0x45cb8f;
         regs[0x1fa82c/4]=0x100000;regs[0x1fa830/4]=0x5cf3ff0;
         regs[(GU_FUSE_SEC2_UCODE1+2*4)/4]=1;
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
         gpu_unlock_610_release_shared(&shared106);
         assert(!ret && fake.starts==1 && fake.gsp_starts==1 && fake.flrs==1);
         assert(!fake.live && !fake.fw_live && dev.refs==1);
-        puts("AD106 0x2805 profile dispatch under mocked registers PASS");
+        printf("AD106 %#x profile dispatch under mocked registers PASS\n",ad106_ids[i]);
         }
         {
         /* Dispatch the same published AD102-family payload through the exact

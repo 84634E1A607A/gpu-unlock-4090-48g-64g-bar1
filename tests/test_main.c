@@ -18,6 +18,7 @@
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
 #define RTX_4070_AD103 GU_AD103_RTX_4070
+#define RTX_4060TI GU_AD106_RTX_4060_TI
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
 #define RTX_4060_MOBILE GU_AD107_RTX_4060_MOBILE
 #define RTX_4050_MOBILE GU_AD107_RTX_4050_MOBILE
@@ -391,29 +392,32 @@ int main(void)
 	puts("ad103 0x2709: gated exact-card dispatch PASS");
 
 	/* The AD106 target needs its own flag and exactly one BDF. */
-	reset("0000:01:00.0");
-	add("0000:01:00.0", RTX_4060TI_16GB, false);
-	run();
-	assert(!fake.loads && !fake.started);
-	assert(logged("no supported card at \"0000:01:00.0\""));
-	reset("0000:01:00.0");
-	ad103_experimental = true;
-	add("0000:01:00.0", RTX_4060TI_16GB, false);
-	run();
-	assert(!fake.loads && !fake.started);
-	reset("all");
-	ad106_experimental = true;
-	add("0000:01:00.0", RTX_4060TI_16GB, false);
-	run();
-	assert(!fake.loads && !fake.started);
-	assert(logged("experimental AD106 requires a single exact PCI target"));
-	reset("0000:01:00.0");
-	ad106_experimental = true;
-	add("0000:01:00.0", RTX_4060TI_16GB, false);
-	fake.expected_concurrent = 1;
-	run();
-	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
-	puts("ad106: gated exact-card dispatch PASS");
+	const unsigned short ad106_ids[] = { RTX_4060TI_16GB, RTX_4060TI };
+	for (unsigned int i = 0; i < ARRAY_SIZE(ad106_ids); i++) {
+		reset("0000:01:00.0");
+		add("0000:01:00.0", ad106_ids[i], false);
+		run();
+		assert(!fake.loads && !fake.started);
+		assert(logged("no supported card at \"0000:01:00.0\""));
+		reset("0000:01:00.0");
+		ad103_experimental = true;
+		add("0000:01:00.0", ad106_ids[i], false);
+		run();
+		assert(!fake.loads && !fake.started);
+		reset("all");
+		ad106_experimental = true;
+		add("0000:01:00.0", ad106_ids[i], false);
+		run();
+		assert(!fake.loads && !fake.started);
+		assert(logged("experimental AD106 requires a single exact PCI target"));
+		reset("0000:01:00.0");
+		ad106_experimental = true;
+		add("0000:01:00.0", ad106_ids[i], false);
+		fake.expected_concurrent = 1;
+		run();
+		assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+		printf("ad106 %#x: gated exact-card dispatch PASS\n", ad106_ids[i]);
+	}
 	reset("all");
 	ad107_experimental = true;
 	add("0000:01:00.0", RTX_4060_LAPTOP, false);

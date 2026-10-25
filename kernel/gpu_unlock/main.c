@@ -77,6 +77,7 @@ static const struct experimental_id {
 	{ GU_AD102_RTX_4070_TI_SUPER, &rtx4070tis_ad102_experimental, true, "AD102 RTX 4070 Ti SUPER" },
 	{ GU_AD103_RTX_4070, &ad103_experimental, true, "AD103" },
 	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
+	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);

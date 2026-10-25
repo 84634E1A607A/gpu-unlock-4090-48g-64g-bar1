@@ -109,14 +109,15 @@ TF/s) and cuBLAS FP16/BF16 GEMM medians rose 43–50%; numerical checks passed
 in both states. The AD104 RTX 4070 (`10de:2786`) is a different chip and is not
 admitted. See the [2709 report](docs/ada-2709-report.md).
 
-RTX 4060 Ti 16GB `10de:2805` is an **experimental AD106 target validated on one
-card**. It uses the same AD102-family payload and requires both
-`gpu_unlock.ad106_experimental=1` and a single exact PCI address; `targets=all`
-never selects it. On the tested card, one cold boot passed every marker,
-permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
-the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
-same-card stock throughput run has been made yet. See the
-[2805 report](docs/ada-2805-report.md).
+RTX 4060 Ti `10de:2805` and `10de:2803` are **experimental AD106 targets,
+each validated on one 16GB card**. Both use the same AD102-family payload and
+require `gpu_unlock.ad106_experimental=1` with a single exact PCI address.
+`targets=all` never selects them. On each tested card, the marker, permission,
+selector and post-FLR gates passed, the stock NVIDIA driver loaded, and the
+RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. Other AD106 boards and
+8 GB variants remain unverified. See the [2805 report](docs/ada-2805-report.md)
+and [2803 report](docs/ada-2803-report.md) for measurements and remaining tests.
+
 
 RTX 4080 `10de:2704` is an **experimental AD102-family target validated on one
 modified-32-GiB card**. It requires `gpu_unlock.rtx4080_experimental=1` and one

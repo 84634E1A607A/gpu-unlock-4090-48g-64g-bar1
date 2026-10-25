@@ -14,6 +14,7 @@ RTX 4070 Ti `10de:2782` is experimental and has been unlocked on **one** card
 The AD102 RTX 4070 Ti SUPER `10de:2689` is experimental and has been unlocked on one card.
 The RTX 4070 built on AD103 (`10de:2709`) shares the 2705 path and has been unlocked on **one** card ([2709 report](docs/ada-2709-report.md)).
 RTX 4060 Laptop GPU `10de:28a0` is an experimental AD107 target unlocked on **one** card ([28a0 report](docs/ada-28a0-report.md)).
+RTX 4060 Ti `10de:2803` shares the experimental AD106 path and has been unlocked on **one** 16GB card ([2803 report](docs/ada-2803-report.md)).
 Other Ada IDs remain disabled except for the listed experiments.
 The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
@@ -41,6 +42,7 @@ RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
 `10de:2689` for the experimental AD102 RTX 4070 Ti SUPER path,
 `10de:2709` for the experimental AD103 RTX 4070 path,
 `10de:28a0` (RTX 4060 Laptop GPU) for the experimental AD107 path,
+`10de:2803` for the experimental RTX 4060 Ti AD106 path,
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -88,7 +90,8 @@ For an RTX 4070 non-Ti `10de:2786`, use the same two options above. This
 shares the existing AD103 opt-in as tested, but admits only the exact 2786
 AD104 PCI ID; it does not enable other AD104 cards.
 
-For an RTX 4060 Ti 16GB `10de:2805`, use its own experimental flag instead:
+For an RTX 4060 Ti `10de:2803` or `10de:2805`, use its own experimental flag
+instead:
 
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
