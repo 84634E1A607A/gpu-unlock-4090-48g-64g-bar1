@@ -37,6 +37,8 @@ quantized mixture-of-experts serving workload on the same card showed **no**
 gain (8K prefill 0.983×), which is consistent with quantized matmuls not
 consuming the FP32-accumulate tensor path. That is one card, one cold boot and
 one workload. See the [modified-card evidence and limits](docs/evidence/rtx4090-48g-modded/README.md).
+Further matched owner reproductions used NVIDIA [610.57.04](docs/evidence/rtx4090-610.57.04/README.md)
+and [595.91.07](docs/evidence/rtx4090-595.91.07/README.md).
 
 A separate cold test of the Ada port on one RTX 4070 Ti SUPER
 (`10de:2705`) with NVIDIA `580.178.04` measured FP16/FP32 tensor issue rate
@@ -55,12 +57,6 @@ This is one card; the unlock succeeded on two cold boots and two ordinary
 warm reboots, the last from a persistent EFI default. Throughput was measured
 on the first cold boot. See the [2705 canary report](docs/ada-2705-report.md)
 and its [sanitized raw benchmark output](docs/evidence/ada2705/README.md).
-
-RTX 4090 Laptop GPU (`10de:2757`, AD103M) is **experimental**, with differing
-board results: the Clevo run completed the unlock but showed no throughput
-change (see the [2757 report](docs/ada-2757-report.md)), while a
-[Lenovo owner report](https://github.com/JustAResearcher/gpu-unlock-ada/issues/4#issuecomment-6397961415)
-measured 2× FP16/BF16 tensor throughput with FP32 accumulation on two cold boots.
 
 The AD102 payload and its debug-booter analysis come from
 **[TOTORONG/AD103_win_unlocker](https://huggingface.co/TOTORONG/AD103_win_unlocker)**.
@@ -87,108 +83,36 @@ RTX 3090 success; this branch does not revalidate every legacy board.
 GA107 RTX 3050 6GB (`10de:2584`) uses the same GA102 Booter path and was
 unlocked on one card ([2584 report](docs/ga107-2584-report.md)).
 
-RTX 4090 D (`10de:2685`) uses the AD102 path with the experimental opt-in
-`gpu_unlock.rtx4090d_experimental=1`. Select cards with `gpu_unlock.targets=`.
+### Experimental Ada targets
 
-The Ada port additionally recognizes RTX 4070 Ti SUPER
-`10de:2705` as an **experimental AD103 target validated on one card**. It requires both
-`gpu_unlock.ad103_experimental=1` and `gpu_unlock.targets=` set to that card's
-single exact PCI address. `targets=all` never selects it. On the tested 2705,
-two cold boots and later warm reboots confirmed driver 580.178.04 handoff and
-full-rate readbacks; matched throughput was measured across stock and unlocked
-boots. Other boards remain unverified.
+Each ID below needs its own opt-in flag. Rows marked *exact* also need
+`gpu_unlock.targets=` set to that card's single exact PCI address, and
+`targets=all` never selects them. All of them use the RTX 4090's pinned
+AD102-family firmware and payload. Results come from one or a few cards per ID;
+other boards, memory configurations and laptop models remain unverified.
+`tools/print_boot_option.py` prints the exact option for any card listed here.
 
-RTX 4070 **non-Ti** `10de:2786` is an **experimental AD104 target validated
-on one Gigabyte card** under CachyOS / NVIDIA `615.78.08`. It uses the existing
-AD102-family assets and, as hardware-tested, shares the
-`gpu_unlock.ad103_experimental=1` opt-in with the AD103 canary. Select one exact
-PCI address; `targets=all` never selects it. One cold boot passed the firmware,
-permission, HALT, selector and post-FLR checks. Independent RM rates changed
-from half to full, and matched FP16/FP32 and BF16/FP32 instruction throughput
-approximately doubled. This is not a whole-application speedup or general AD104
-compatibility claim. See the [2786 report](docs/ada-2786-report.md).
+| PCI ID | Card | Die | Opt-in | Tested | Details |
+|---|---|---|---|---|---|
+| `2685` | RTX 4090 D | AD102 | `rtx4090d_experimental` | eight cards in one host | [#7](https://github.com/JustAResearcher/gpu-unlock-ada/pull/7) |
+| `2689` | RTX 4070 Ti SUPER | AD102 | `rtx4070tis_ad102_experimental`, exact | one card, 30-minute soak | [#19](https://github.com/JustAResearcher/gpu-unlock-ada/pull/19) |
+| `2704` | RTX 4080 | AD103 | `rtx4080_experimental`, exact | one modified 32 GiB card; a second card in [matched evidence](docs/evidence/ada2702-ada2704-matched/README.md) | [report](docs/rtx4080-hardware-report.md) |
+| `2705` | RTX 4070 Ti SUPER | AD103 | `ad103_experimental`, exact | one card, matched stock/unlocked | [report](docs/ada-2705-report.md) |
+| `2709` | RTX 4070 | AD103 | `ad103_experimental`, exact | one card, matched | [report](docs/ada-2709-report.md) |
+| `2757` | RTX 4090 Laptop GPU | AD103M | `ad103m_experimental`, exact | Clevo: unlocked, no throughput change; Lenovo: 2× on two cold boots | [report](docs/ada-2757-report.md), [Lenovo](https://github.com/JustAResearcher/gpu-unlock-ada/issues/4#issuecomment-6397961415) |
+| `2782` | RTX 4070 Ti | AD104 | `ad104_experimental`, exact | one card in a VFIO guest, matched; one bare-metal owner report | [report](docs/ada-2782-report.md), [#15](https://github.com/JustAResearcher/gpu-unlock-ada/pull/15) |
+| `2783` | RTX 4070 SUPER | AD104 | `ad104_experimental`, exact | one card, matched | [report](docs/ada-2783-report.md) |
+| `2786` | RTX 4070 | AD104 | `ad103_experimental`, exact | one card; three owner reports | [report](docs/ada-2786-report.md), [#11](https://github.com/JustAResearcher/gpu-unlock-ada/pull/11) |
+| `2803` | RTX 4060 Ti | AD106 | `ad106_experimental`, exact | one 16 GB card, matched | [report](docs/ada-2803-report.md) |
+| `2805` | RTX 4060 Ti 16GB | AD106 | `ad106_experimental`, exact | one card, no matched throughput run | [report](docs/ada-2805-report.md) |
+| `28a0` | RTX 4060 Laptop GPU | AD107 | `ad107_experimental`, exact | one card, unlocked state only | [report](docs/ada-28a0-report.md) |
+| `28e0` | RTX 4060 Laptop GPU | AD107 | `ad107_experimental`, exact | one owner report | [#10](https://github.com/JustAResearcher/gpu-unlock-ada/pull/10) |
+| `28e1` | RTX 4050 Laptop GPU | AD107 | `ad107_experimental`, exact | one laptop, matched | [report](docs/ada-28e1-report.md) |
 
-The RTX 4070 built on AD103 (`10de:2709`, 46 SMs) uses the same
-`gpu_unlock.ad103_experimental=1` opt-in and single-exact-address rule as the
-2705. One card passed every gate on its first attempt, a warm reboot with entry
-WPR2 high `0x0`, before NVIDIA 595.99.02. Matched instruction rates doubled
-(FP16/FP32 66.3 → 132.2 TF/s, BF16/FP32 66.3 → 132.0 TF/s, TF32 33.1 → 65.8
-TF/s) and cuBLAS FP16/BF16 GEMM medians rose 43–50%; numerical checks passed
-in both states. The AD104 RTX 4070 (`10de:2786`) is a different chip and is not
-admitted. See the [2709 report](docs/ada-2709-report.md).
-
-RTX 4060 Ti `10de:2805` and `10de:2803` are **experimental AD106 targets,
-each validated on one 16GB card**. Both use the same AD102-family payload and
-require `gpu_unlock.ad106_experimental=1` with a single exact PCI address.
-`targets=all` never selects them. On each tested card, the marker, permission,
-selector and post-FLR gates passed, the stock NVIDIA driver loaded, and the
-RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. Other AD106 boards and
-8 GB variants remain unverified. See the [2805 report](docs/ada-2805-report.md)
-and [2803 report](docs/ada-2803-report.md) for measurements and remaining tests.
-
-
-RTX 4080 `10de:2704` is an **experimental AD102-family target validated on one
-modified-32-GiB card**. It requires `gpu_unlock.rtx4080_experimental=1` and one
-exact PCI address; `targets=all` never selects it. The single-card report
-records the guarded trial, driver handoff, unchanged CUDA GEMM outputs, and
-synthetic GEMM timings. A matched Qwen 27B prefill comparison measured
-19.9–26.9% higher throughput at approximately 4K, 16K and 64K input tokens.
-Other cards and memory configurations, boot repeatability, and gains on other
-workloads remain unverified. See the
-[RTX 4080 hardware report](docs/rtx4080-hardware-report.md).
-
-RTX 4050 Mobile `10de:28e1` is an **experimental AD107 target validated on one
-machine (ASUS TUF Gaming A16 FA607NUG, AMD Ryzen 7 7445HS)**. It requires both
-`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
-never selects it. One cold boot passed every marker, permission, selector and
-post-FLR gate, the NVIDIA 615.78.08 driver loaded, and the RM getter changed
-FMLA32, IMLA2 and IMLA4 from half to full rate. Matched SM89 issue-rate
-benchmarks showed a 2.00× speedup for FP16/FP32 accumulate (26.5 → 53.0 TF/s) and
-TF32/FP32 accumulate (13.2 → 26.4 TF/s). **Warning:** Due to OEM laptop
-hardware variance in VBIOS ROM aperture exposure (BAR0 + `0x300000`), EC power rails,
-and PCIe root complex FLR handling, this may not work on other laptop models
-without prior hardware verification. See the [28e1 report](docs/ada-28e1-report.md).
-RTX 4060 Mobile `10de:28e0` is also accepted under `gpu_unlock.ad107_experimental=1` with a single exact target.
-
-RTX 4070 Ti `10de:2782` is an **experimental AD104 target validated on one
-card**. It uses the same AD102-family payload and requires both
-`gpu_unlock.ad104_experimental=1` and a single exact PCI address; `targets=all`
-never selects it. On the tested ASUS card, passed through by VFIO to a KVM
-guest, one cold boot passed every gate with the NVIDIA 595.99.02 driver. A
-matched stock/unlocked run measured FP16/BF16/TF32 FP32-accumulate instruction
-rates doubled and large cuBLAS FP16/BF16 GEMMs +93-94%. A later guest reboot
-kept the unlock. See the [2782 report](docs/ada-2782-report.md).
-
-RTX 4070 Ti SUPER `10de:2689` is the same product on a cut-down **AD102** die,
-not the AD103 `10de:2705`. It is an **experimental target, untested on silicon**.
-It routes through the AD102 path and requires both
-`gpu_unlock.rtx4070tis_ad102_experimental=1` and a single exact PCI address;
-`targets=all` never selects it.
-RTX 4060 Laptop GPU `10de:28a0` is an **experimental AD107 target validated on
-one card**. It uses the same AD102-family payload and requires both
-`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
-never selects it. On the tested card, one boot passed every marker, permission,
-selector and post-FLR gate, the NVIDIA `615.78.08` driver loaded, and the
-module's own effective speed-select readback changed from fields
-`0 0 2 0 0 2 0 2 0` (`full=0`) to all zero (`full=1`) within the same boot; the
-RM getter reported full rate on every field. The card also completed the
-transaction from a driver-initialized warm state, after an earlier failed
-dispatch attempt was cleanly refused with `-EBUSY`. No same-card stock
-instruction-rate run has been made yet; see the
-[28a0 report](docs/ada-28a0-report.md).
-
-RTX 4070 SUPER `10de:2783` is an **experimental AD104 target validated on one
-card** (Linux only). It uses the same AD102-family payload and requires both
-`gpu_unlock.ad104_experimental=1` and a single exact PCI address; `targets=all`
-never selects it. On the tested card, one boot after a full power-off and one
-ordinary warm reboot each reached `gpu_unlock: unlocked`, and the RM getter
-changed FMLA32, IMLA2 and IMLA4 from half to full rate. Matched stock/unlocked
-runs with the same binaries, driver and 242 W cap measured the FP16/BF16 tensor
-instruction rate at **76.7 → 153.6 TF/s** and large cuBLAS GEMMs at +37–92%
-depending on size; INT8 was unchanged and a quantized (IQ2_XS) llama.cpp
-workload showed no difference. See the [2783 report](docs/ada-2783-report.md).
-Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
-Shared firmware across Ada chips does not establish support for untested cards.
+Laptops differ in VBIOS ROM exposure, embedded-controller power rails and FLR
+handling, so a result on one model does not carry over to another. Other Ada
+IDs, professional RTX A-series and data-centre parts are not accepted. Shared
+firmware across Ada chips does not establish support for untested cards.
 
 The RTX 4090 path runs the signed firmware, checks the payload's completion marker and
 required permissions, writes SS0 `0x88888888` and SS1 `0x8`, then performs FLR
@@ -246,17 +170,14 @@ gpu_unlock.targets=0000:03:00.0
 gpu_unlock.targets=0000:03:00.0,0000:04:00.0
 gpu_unlock.targets=all
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4070tis_ad102_experimental=1
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad104_experimental=1
 ```
 
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. Every experimental Ada target requires its own experimental flag and
-a single exact PCI address; `all` never selects them. Invalid entries
+addresses. Every experimental Ada target requires its own flag from the
+[experimental target table](#experimental-ada-targets), and the exact ones a
+single exact PCI address; `all` never selects them. Invalid entries
 are logged and ignored.
 
 The packages support these initramfs generators:

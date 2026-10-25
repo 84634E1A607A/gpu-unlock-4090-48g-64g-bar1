@@ -1,31 +1,13 @@
 # GPU Unlock: quick start
 
-This guide is for a Linux machine you control. The RTX 4070 Ti SUPER path is
-experimental and has been tested on **one** `10de:2705` card. RTX 4090
-`10de:2684` has a separate [single-card report](rtx4090-register-report.md).
-RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
-card ([2805 report](docs/ada-2805-report.md)). RTX 4050 Mobile `10de:28e1`
-is experimental and has been unlocked on **one** board ([28e1 report](docs/ada-28e1-report.md)).
-RTX 4060 Mobile `10de:28e0` is also an experimental AD107 target enabled under the same flag.
-RTX 4070 non-Ti `10de:2786` is experimental and validated on one Gigabyte card
-on native Linux ([2786 report](docs/ada-2786-report.md)).
-RTX 4070 Ti `10de:2782` is experimental and has been unlocked on **one** card
-([2782 report](docs/ada-2782-report.md)).
-The AD102 RTX 4070 Ti SUPER `10de:2689` is experimental and has been unlocked on one card.
-The RTX 4070 built on AD103 (`10de:2709`) shares the 2705 path and has been unlocked on **one** card ([2709 report](docs/ada-2709-report.md)).
-RTX 4060 Laptop GPU `10de:28a0` is an experimental AD107 target unlocked on **one** card ([28a0 report](docs/ada-28a0-report.md)).
-RTX 4060 Ti `10de:2803` shares the experimental AD106 path and has been unlocked on **one** 16GB card ([2803 report](docs/ada-2803-report.md)).
-RTX 4070 SUPER `10de:2783` is an experimental AD104 target unlocked on **one** card ([2783 report](docs/ada-2783-report.md)).
-Other Ada IDs remain disabled except for the listed experiments.
-The measured instruction-rate gain is for
+This guide is for a Linux machine you control. RTX 4090 `10de:2684` has a
+separate [single-card report](rtx4090-register-report.md). Every other Ada ID in
+the README's [experimental target table](README.md#experimental-ada-targets) is
+experimental, was tested on one or a few cards, and needs its own opt-in flag.
+Other Ada IDs remain disabled. The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
 INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
 effectively unchanged (59.326 → 59.495 TF/s).
-
-RTX 4080 `10de:2704` is an experimental target tested on one modified-32-GiB
-card; the [hardware report](docs/rtx4080-hardware-report.md) includes a matched
-Qwen prefill comparison. Other cards, memory configurations, boot repeatability,
-and gains on other workloads remain unverified.
 
 ## 1. Find your GPU's PCI address
 
@@ -34,19 +16,9 @@ lspci -Dnn | grep -i nvidia
 ```
 
 Find the line for your GPU. The full address is the first field, such as
-`0000:01:00.0`. Confirm the device ID is `10de:2705` for the experimental
-RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
-`10de:2704` for the experimental RTX 4080 path,
-`10de:28e1` (RTX 4050 Mobile) or `10de:28e0` (RTX 4060 Mobile) for the experimental AD107 path,
-`10de:2786` for the experimental RTX 4070 non-Ti path,
-`10de:2782` for the experimental RTX 4070 Ti path,
-`10de:2689` for the experimental AD102 RTX 4070 Ti SUPER path,
-`10de:2709` for the experimental AD103 RTX 4070 path,
-`10de:28a0` (RTX 4060 Laptop GPU) for the experimental AD107 path,
-`10de:2803` for the experimental RTX 4060 Ti AD106 path,
-`10de:2783` for the experimental RTX 4070 SUPER path,
-or `10de:2684` for the RTX 4090 path. Keep this address
-for step 3. On a multi-GPU host, identify the exact intended card; do not use
+`0000:01:00.0`. Confirm the device ID is `10de:2684` for the RTX 4090 path or
+appears in the [experimental target table](README.md#experimental-ada-targets).
+Keep this address for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
 
 ## 2. Install from open source
@@ -78,63 +50,14 @@ for each eligible GPU it finds:
 python3 tools/print_boot_option.py
 ```
 
-Choose **one** printed line for the first cold test. The examples below show
-the format if you prefer to enter it manually.
-
-For an RTX 4070 Ti SUPER `10de:2705` or an AD103 RTX 4070 `10de:2709`, append these **two** options to your
-kernel command line, replacing the sample address with yours:
+Choose **one** printed line for the first cold test. To enter it manually,
+use the card's opt-in flag from the
+[experimental target table](README.md#experimental-ada-targets). For an
+RTX 4070 Ti SUPER `10de:2705`, append these **two** options to your kernel
+command line, replacing the sample address with yours:
 
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
-```
-
-For an RTX 4070 non-Ti `10de:2786`, use the same two options above. This
-shares the existing AD103 opt-in as tested, but admits only the exact 2786
-AD104 PCI ID; it does not enable other AD104 cards.
-
-For an RTX 4060 Ti `10de:2803` or `10de:2805`, use its own experimental flag
-instead:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
-```
-
-For an RTX 4080 `10de:2704`, use its own experimental flag and one exact PCI
-address:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
-```
-
-For an RTX 4050 Mobile `10de:28e1` or RTX 4060 Mobile `10de:28e0`, use their shared experimental flag instead:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
-```
-
-For an RTX 4070 Ti `10de:2782`, use its own experimental flag:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad104_experimental=1
-```
-
-For an AD102 RTX 4070 Ti SUPER `10de:2689` (untested on silicon), use its own
-experimental flag:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4070tis_ad102_experimental=1
-```
-
-For an RTX 4060 Laptop GPU `10de:28a0`, use its own experimental flag instead:
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
-```
-
-For an RTX 4070 SUPER `10de:2783` ([2783 report](docs/ada-2783-report.md)):
-
-```text
-gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad104_experimental=1
 ```
 
 For an RTX 4090 `10de:2684`, only the first option is needed:
