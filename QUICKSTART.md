@@ -3,10 +3,9 @@
 This guide is for a Linux machine you control. The RTX 4070 Ti SUPER path is
 experimental and has been tested on **one** `10de:2705` card. RTX 4090
 `10de:2684` has a separate [single-card report](rtx4090-register-report.md).
-RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
-card ([2805 report](docs/ada-2805-report.md)). RTX 4060 Ti `10de:2803` uses the same experimental AD106 
-path and has passed the unlock and numerical checks
-on **one 16GB card** ([2803 report](docs/ada-2803-report.md)).
+RTX 4060 Ti `10de:2805` and `10de:2803` share the experimental AD106 path,
+each tested on **one 16GB card** ([2805 report](docs/ada-2805-report.md),
+[2803 report](docs/ada-2803-report.md)).
 Other Ada IDs are not enabled. The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
 INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
