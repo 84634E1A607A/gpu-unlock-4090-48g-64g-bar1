@@ -27,6 +27,7 @@
 #define RTX_4070TIS_AD102 GU_AD102_RTX_4070_TI_SUPER
 #define RTX_4060_LAPTOP GU_AD107_RTX_4060_LAPTOP
 #define RTX_4070_SUPER GU_AD104_RTX_4070_SUPER
+#define RTX_4090_LAPTOP GU_AD103M_RTX_4090_MOBILE
 
 static struct pci_dev devices[MAX_DEVICES];
 static unsigned int device_count;
@@ -217,7 +218,7 @@ static void reset(char *list)
 	ad104_experimental = false;
 	rtx4070tis_ad102_experimental = false;
 	ad107_experimental = false;
-	ad104_experimental = false;
+	ad103m_experimental = false;
 }
 
 /* Runs init, then checks what holds for every case. */
@@ -437,6 +438,31 @@ int main(void)
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad107: gated exact-card dispatch PASS");
 
+
+	/* The AD103M laptop target needs its own flag and exactly one BDF. */
+	reset("0000:01:00.0");
+	ad103_experimental = true;
+	add("0000:01:00.0", RTX_4090_LAPTOP, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("all");
+	ad103m_experimental = true;
+	add("0000:01:00.0", RTX_4090_LAPTOP, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD103M mobile requires a single exact PCI target"));
+	reset("0000:01:00.0,0000:02:00.0");
+	ad103m_experimental = true;
+	add("0000:01:00.0", RTX_4090_LAPTOP, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("0000:01:00.0");
+	ad103m_experimental = true;
+	add("0000:01:00.0", RTX_4090_LAPTOP, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	puts("ad103m: gated exact-card dispatch PASS");
 
     /* The local 4080 port never broadens the existing AD103 flag or all. */
     reset("0000:01:00.0");

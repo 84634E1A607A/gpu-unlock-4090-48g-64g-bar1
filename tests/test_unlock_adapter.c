@@ -54,6 +54,7 @@ static bool fake_ada_id(void) {
            dev.device==GU_AD104_RTX_4070_TI ||
            dev.device==GU_AD102_RTX_4070_TI_SUPER ||
            dev.device==GU_AD107_RTX_4060_LAPTOP ||
+           dev.device==GU_AD103M_RTX_4090_MOBILE ||
            dev.device==GU_AD106_RTX_4060_TI ||
            dev.device==GU_AD104_RTX_4070_SUPER ||
            dev.device==GU_AD107_RTX_4060_MOBILE;
@@ -414,6 +415,11 @@ int main(int argc, char **argv) {
     assert(!strcmp(unlock_assets(&dev)->booter, BOOTER_FILE_AD102));
     assert(!strcmp(unlock_assets(&dev)->signature_section, ".fwsignature_ad10x"));
     assert(unlock_assets(&dev)->boot_image_size==36864);
+    assert(is_ad102(&w));
+    dev.device=GU_AD103M_RTX_4090_MOBILE;
+    assert(!strcmp(unlock_assets(&dev)->booter, BOOTER_FILE_AD102));
+    assert(!strcmp(unlock_assets(&dev)->payload, V67_FILE_AD102));
+    assert(unlock_assets(&dev)->arch==GU_BOOTER_AD10X);
     assert(is_ad102(&w));
     dev.device=GU_AD104_RTX_4070_SUPER;
     assert(!strcmp(unlock_assets(&dev)->booter, BOOTER_FILE_AD102));
