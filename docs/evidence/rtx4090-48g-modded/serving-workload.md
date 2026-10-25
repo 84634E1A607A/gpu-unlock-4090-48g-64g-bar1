@@ -41,8 +41,13 @@ per-token GEMM. A perfect 2x on that 0.43% would move the numbers reported above
 under a percent, which is inside the 1-4% spread.
 The controls say the same thing:
 `dp4a` 164.0 -> 163.5 TF/s and `s8/s32` 659.4 -> 657.7 TF/s.
-A BF16 workload -- the BF16 vision projector that ships next to this model, or unquantized
-weights -- is where the unlock should still pay off; neither was measured here.
+The speculative decoder's draft model is not pure BF16 either: its manifest is 76.7% Q8_0 and
+23.3% BF16 by element count, and the BF16 part is rank-320 hyper-connection mixers plus a
+512x2560 gate -- skinny, bandwidth-bound projections rather than large GEMMs. The Q8_0 part is
+the INT8 path that does not move with this unlock, and every accepted draft still costs one
+quantized verification pass of the main model.
+A BF16-heavy workload -- the BF16 vision projector that ships next to this model, or
+unquantized weights -- is where the unlock should still pay off; neither was measured here.
 
 ## Limits
 
