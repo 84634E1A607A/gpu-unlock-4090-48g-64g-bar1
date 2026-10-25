@@ -10,14 +10,14 @@
 
 static char *targets;
 module_param(targets, charp, 0444);
-MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 and AD106 require an exact single address");
+MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 and AD106 must be named by their exact address in the list, never via all");
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
+MODULE_PARM_DESC(ad103_experimental, "permit the 10de:2705 AD103 canary when its exact PCI address appears in the targets list");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
-MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
+MODULE_PARM_DESC(ad106_experimental, "permit the 10de:2805 AD106 target when its exact PCI address appears in the targets list; untested on silicon");
 
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
@@ -138,13 +138,13 @@ static int __init gpu_unlock_init(void)
 		report_unmatched();
 	while ((pdev = next_supported(pdev))) {
 		if (pdev->device == GU_AD103_RTX_4070_TI_SUPER &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental AD103 requires a single exact PCI target\n");
+		    (all || !listed(pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental AD103 requires its exact PCI address in the list\n");
 			continue;
 		}
 		if (pdev->device == GU_AD106_RTX_4060_TI_16GB &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental AD106 requires a single exact PCI target\n");
+		    (all || !listed(pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental AD106 requires its exact PCI address in the list\n");
 			continue;
 		}
 		if (!all && !listed(pci_name(pdev)))

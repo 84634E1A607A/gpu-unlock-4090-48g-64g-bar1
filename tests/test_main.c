@@ -18,6 +18,7 @@
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
+#define RTX_3060 0x2504 /* GA106, standard (non-experimental) path */
 
 static struct pci_dev devices[MAX_DEVICES];
 static unsigned int device_count;
@@ -314,14 +315,14 @@ int main(void)
 	add("0000:01:00.0", RTX_4070TI_SUPER, false);
 	run();
 	assert(!fake.loads && !fake.started);
-	assert(logged("experimental AD103 requires a single exact PCI target"));
+	assert(logged("experimental AD103 requires its exact PCI address in the list"));
 	reset("0000:01:00.0,0000:02:00.0");
 	ad103_experimental = true;
 	add("0000:01:00.0", RTX_4070TI_SUPER, false);
 	add("0000:02:00.0", RTX_3090, false);
-	fake.expected_concurrent = 1;
+	fake.expected_concurrent = 2;
 	run();
-	assert(!fake.unlocks[0] && fake.unlocks[1]);
+	assert(fake.unlocks[0] && fake.unlocks[1]);
 	reset("0000:01:00.0");
 	ad103_experimental = true;
 	add("0000:01:00.0", RTX_4070TI_SUPER, false);
@@ -346,7 +347,15 @@ int main(void)
 	add("0000:01:00.0", RTX_4060TI_16GB, false);
 	run();
 	assert(!fake.loads && !fake.started);
-	assert(logged("experimental AD106 requires a single exact PCI target"));
+	assert(logged("experimental AD106 requires its exact PCI address in the list"));
+	/* Experimental cards may share a list with other supported cards. */
+	reset("0000:01:00.0,0000:02:00.0");
+	ad106_experimental = true;
+	add("0000:01:00.0", RTX_4060TI_16GB, false);
+	add("0000:02:00.0", RTX_3090, false);
+	fake.expected_concurrent = 2;
+	run();
+	assert(fake.unlocks[0] && fake.unlocks[1]);
 	reset("0000:01:00.0");
 	ad106_experimental = true;
 	add("0000:01:00.0", RTX_4060TI_16GB, false);
@@ -354,6 +363,17 @@ int main(void)
 	run();
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad106: gated exact-card dispatch PASS");
+
+	/* Exact mixed dual-card case: AD106 2805 + GA106 2504 in one list. */
+	reset("0000:04:00.0,0000:03:00.0");
+	ad106_experimental = true;
+	add("0000:04:00.0", RTX_4060TI_16GB, false);
+	add("0000:03:00.0", RTX_3060, false);
+	fake.expected_concurrent = 2;
+	run();
+	assert(fake.unlocks[0] && fake.unlocks[1]);
+	assert(fake.loads == 1 && fake.started == 2 && fake.releases == 1);
+	puts("ad106+ga106 dual-card list dispatch PASS");
 
 	/* No opt-in on the command line: the module does nothing. */
 	for (int empty = 0; empty < 2; empty++) {
