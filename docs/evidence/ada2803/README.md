@@ -1,8 +1,10 @@
 # RTX 4060 Ti 16GB 10de:2803 evidence
 
 The [2803 report](../../ada-2803-report.md) describes one card tested on
-October 25, 2026 at its 165 W cap. `metadata.json` records the driver,
-kernels, benchmark commands, binary hashes and test limits.
+October 25, 2026 at its 165 W cap. One matched pair used kernel
+`6.18.58-1-lts` in both states, measured unlocked first and stock second.
+`metadata.json` records the matching inputs, benchmark commands, hashes
+and test limits.
 
 `tensor-modes-stock.json` and `tensor-modes-unlocked.json` contain stdout
 from `diagnostics/bench/tensor_modes_driver_runner.py`. `stock-mma.txt` and
