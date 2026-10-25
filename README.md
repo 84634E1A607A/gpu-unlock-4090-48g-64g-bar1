@@ -90,6 +90,7 @@ TF32/FP32 accumulate (13.2 → 26.4 TF/s). **Warning:** Due to OEM laptop
 hardware variance in VBIOS ROM aperture exposure (BAR0 + `0x300000`), EC power rails,
 and PCIe root complex FLR handling, this may not work on other laptop models
 without prior hardware verification. See the [28e1 report](docs/ada-28e1-report.md).
+RTX 4060 Mobile `10de:28e0` is also accepted under `gpu_unlock.ad107_experimental=1` with a single exact target.
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 

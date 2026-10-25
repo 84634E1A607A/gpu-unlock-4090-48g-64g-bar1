@@ -6,6 +6,7 @@ experimental and has been tested on **one** `10de:2705` card. RTX 4090
 RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
 card ([2805 report](docs/ada-2805-report.md)). RTX 4050 Mobile `10de:28e1`
 is experimental and has been unlocked on **one** board ([28e1 report](docs/ada-28e1-report.md)).
+RTX 4060 Mobile `10de:28e0` is also an experimental AD107 target enabled under the same flag.
 Other Ada IDs are not enabled. The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
 INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
@@ -20,7 +21,7 @@ lspci -Dnn | grep -i nvidia
 Find the line for your GPU. The full address is the first field, such as
 `0000:01:00.0`. Confirm the device ID is `10de:2705` for the experimental
 RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
-`10de:28e1` for the experimental RTX 4050 Mobile path,
+`10de:28e1` (RTX 4050 Mobile) or `10de:28e0` (RTX 4060 Mobile) for the experimental AD107 path,
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -70,7 +71,7 @@ For an RTX 4060 Ti 16GB `10de:2805`, use its own experimental flag instead:
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
 ```
 
-For an RTX 4050 Mobile `10de:28e1`, use its own experimental flag instead:
+For an RTX 4050 Mobile `10de:28e1` or RTX 4060 Mobile `10de:28e0`, use their shared experimental flag instead:
 
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1

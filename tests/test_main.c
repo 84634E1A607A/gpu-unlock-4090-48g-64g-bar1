@@ -18,6 +18,7 @@
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
+#define RTX_4060_MOBILE GU_AD107_RTX_4060_MOBILE
 #define RTX_4050_MOBILE GU_AD107_RTX_4050_MOBILE
 
 static struct pci_dev devices[MAX_DEVICES];
@@ -376,6 +377,18 @@ int main(void)
 	reset("0000:01:00.0");
 	ad107_experimental = true;
 	add("0000:01:00.0", RTX_4050_MOBILE, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	reset("all");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_MOBILE, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD107 requires a single exact PCI target"));
+	reset("0000:01:00.0");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_MOBILE, false);
 	fake.expected_concurrent = 1;
 	run();
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
