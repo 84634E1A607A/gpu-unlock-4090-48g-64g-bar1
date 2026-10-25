@@ -5,13 +5,24 @@ import re
 import subprocess
 import sys
 
+# PCI device ID -> (label, experimental opt-in or None).
+TARGETS = {
+    "2684": ("RTX 4090", None),
+    "2685": ("RTX 4090 D (experimental)", "rtx4090d_experimental"),
+    "2704": ("RTX 4080 (experimental)", "rtx4080_experimental"),
+    "2705": ("RTX 4070 Ti SUPER (experimental)", "ad103_experimental"),
+    "2805": ("RTX 4060 Ti 16GB (experimental)", "ad106_experimental"),
+    "28e0": ("RTX 4060 Mobile (experimental)", "ad107_experimental"),
+    "28e1": ("RTX 4050 Mobile (experimental)", "ad107_experimental"),
+}
+
 
 def candidates(lspci_output: str) -> list[tuple[str, str]]:
     found = []
     for line in lspci_output.splitlines():
         address = re.match(r"^([0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7])\s", line)
-        device = re.search(r"\[10de:(2684|2685|2704|2705|2805|28e0|28e1)\]", line, re.I)
-        if address and device:
+        device = re.search(r"\[10de:([0-9a-f]{4})\]", line, re.I)
+        if address and device and device.group(1).lower() in TARGETS:
             found.append((address.group(1).lower(), device.group(1).lower()))
     return found
 
@@ -25,33 +36,14 @@ def main() -> int:
         return 1
     found = candidates(result.stdout)
     if not found:
-        print("No supported RTX 4090 (10de:2684), experimental RTX 4090 D "
-              "(10de:2685), experimental RTX 4080 (10de:2704), "
-              "experimental RTX 4070 Ti SUPER (10de:2705), "
-              "experimental RTX 4060 Ti 16GB (10de:2805), "
-              "experimental RTX 4060 Mobile (10de:28e0) or "
-              "experimental RTX 4050 Mobile (10de:28e1) was found.",
-              file=sys.stderr)
+        known = ", ".join(f"{label} (10de:{device})" for device, (label, _) in TARGETS.items())
+        print(f"No supported card was found. Recognized: {known}.", file=sys.stderr)
         return 2
     for address, device in found:
+        label, flag = TARGETS[device]
         options = f"gpu_unlock.targets={address}"
-        label = {"2684": "RTX 4090",
-                 "2685": "RTX 4090 D (experimental)",
-                 "2704": "RTX 4080 (experimental)",
-                 "2705": "RTX 4070 Ti SUPER (experimental)",
-                 "2805": "RTX 4060 Ti 16GB (experimental)",
-                 "28e0": "RTX 4060 Mobile (experimental)",
-                 "28e1": "RTX 4050 Mobile (experimental)"}[device]
-        if device == "2685":
-            options += " gpu_unlock.rtx4090d_experimental=1"
-        if device == "2704":
-            options += " gpu_unlock.rtx4080_experimental=1"
-        if device == "2705":
-            options += " gpu_unlock.ad103_experimental=1"
-        if device == "2805":
-            options += " gpu_unlock.ad106_experimental=1"
-        if device in ("28e0", "28e1"):
-            options += " gpu_unlock.ad107_experimental=1"
+        if flag:
+            options += f" gpu_unlock.{flag}=1"
         print(f"{label} at {address} [10de:{device}]:")
         print(options)
         print()

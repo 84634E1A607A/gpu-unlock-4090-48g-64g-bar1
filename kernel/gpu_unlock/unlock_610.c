@@ -57,6 +57,24 @@ struct gpu_unlock_assets {
 };
 
 /* Select the pinned boot assets and payload for each supported chip. */
+/* Every Ada ID that uses the pinned AD102-family Booter archive, payload and
+ * transaction checks. main.c decides admission; this only routes. */
+static bool ad102_family(unsigned short device)
+{
+	switch (device) {
+	case GU_AD102_RTX_4090:
+	case GU_AD102_RTX_4090_D:
+	case GU_AD103_RTX_4080:
+	case GU_AD103_RTX_4070_TI_SUPER:
+	case GU_AD106_RTX_4060_TI_16GB:
+	case GU_AD107_RTX_4050_MOBILE:
+	case GU_AD107_RTX_4060_MOBILE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static const struct gpu_unlock_assets *unlock_assets(const struct pci_dev *pdev)
 {
 	static const struct gpu_unlock_assets ga102 = {
@@ -74,13 +92,7 @@ static const struct gpu_unlock_assets *unlock_assets(const struct pci_dev *pdev)
 		.arch = GU_BOOTER_AD10X, .boot_image_size = 36864,
 	};
 
-	return (pdev->device == GU_AD102_RTX_4090 ||
-		pdev->device == GU_AD102_RTX_4090_D ||
-		pdev->device == GU_AD103_RTX_4080 ||
-		pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
-		pdev->device == GU_AD106_RTX_4060_TI_16GB ||
-		pdev->device == GU_AD107_RTX_4050_MOBILE ||
-		pdev->device == GU_AD107_RTX_4060_MOBILE) ? &ad102 : &ga102;
+	return ad102_family(pdev->device) ? &ad102 : &ga102;
 }
 
 /* The two falcons this module ever touches. SEC2 is the secure boot engine
@@ -349,15 +361,7 @@ static bool inaccessible(u32 value)
 
 static bool is_ad102(const struct unlock_transaction_work *work)
 {
-	/* AD103, AD106 and AD107 use the same pinned AD102-family Booter archive.
-	 * 0x2705 and 0x28e1 have physical canaries; 0x2805 and 0x28e0 are experimental. */
-	return work->pdev->device == GU_AD102_RTX_4090 ||
-	       work->pdev->device == GU_AD102_RTX_4090_D ||
-	       work->pdev->device == GU_AD103_RTX_4080 ||
-	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
-	       work->pdev->device == GU_AD106_RTX_4060_TI_16GB ||
-	       work->pdev->device == GU_AD107_RTX_4050_MOBILE ||
-	       work->pdev->device == GU_AD107_RTX_4060_MOBILE;
+	return ad102_family(work->pdev->device);
 }
 
 static const struct {

@@ -51,25 +51,44 @@ static const unsigned short supported_ids[] = {
 	0x2544,
 };
 
+/* Experimental IDs, each admitted only by its own opt-in. Exact ones also
+ * need a single exact PCI address in targets and are never selected by all.
+ */
+static const struct experimental_id {
+	unsigned short device;
+	const bool *enabled;
+	bool exact;
+	const char *name;
+} experimental_ids[] = {
+	{ GU_AD102_RTX_4090_D, &rtx4090d_experimental, false, "RTX 4090 D" },
+	{ GU_AD103_RTX_4070_TI_SUPER, &ad103_experimental, true, "AD103" },
+	{ GU_AD103_RTX_4080, &rtx4080_experimental, true, "RTX 4080" },
+	{ GU_AD106_RTX_4060_TI_16GB, &ad106_experimental, true, "AD106" },
+	{ GU_AD107_RTX_4050_MOBILE, &ad107_experimental, true, "AD107" },
+	{ GU_AD107_RTX_4060_MOBILE, &ad107_experimental, true, "AD107" },
+};
+
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);
 static struct gpu_unlock_610_shared shared;
+
+static const struct experimental_id *experimental(const struct pci_dev *pdev)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(experimental_ids); i++)
+		if (pdev->device == experimental_ids[i].device)
+			return &experimental_ids[i];
+	return NULL;
+}
 
 /* True for a card this load may act on at all. */
 static bool supported(const struct pci_dev *pdev)
 {
+	const struct experimental_id *id = experimental(pdev);
 	unsigned int i;
 
-	if (pdev->device == GU_AD103_RTX_4080)
-		return rtx4080_experimental;
-	if (pdev->device == GU_AD103_RTX_4070_TI_SUPER)
-		return ad103_experimental;
-	if (pdev->device == GU_AD102_RTX_4090_D)
-		return rtx4090d_experimental;
-	if (pdev->device == GU_AD106_RTX_4060_TI_16GB)
-		return ad106_experimental;
-	if (pdev->device == GU_AD107_RTX_4050_MOBILE ||
-	    pdev->device == GU_AD107_RTX_4060_MOBILE)
-		return ad107_experimental;
+	if (id)
+		return *id->enabled;
 	for (i = 0; i < ARRAY_SIZE(supported_ids); i++)
 		if (pdev->device == supported_ids[i])
 			return true;
@@ -149,25 +168,11 @@ static int __init gpu_unlock_init(void)
 	if (!all)
 		report_unmatched();
 	while ((pdev = next_supported(pdev))) {
-		if (pdev->device == GU_AD103_RTX_4080 &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental RTX 4080 requires a single exact PCI target\n");
-			continue;
-		}
-		if (pdev->device == GU_AD103_RTX_4070_TI_SUPER &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental AD103 requires a single exact PCI target\n");
-			continue;
-		}
-		if (pdev->device == GU_AD106_RTX_4060_TI_16GB &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental AD106 requires a single exact PCI target\n");
-			continue;
-		}
-		if ((pdev->device == GU_AD107_RTX_4050_MOBILE ||
-		     pdev->device == GU_AD107_RTX_4060_MOBILE) &&
-		    (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental AD107 requires a single exact PCI target\n");
+		const struct experimental_id *id = experimental(pdev);
+
+		if (id && id->exact && (all || strcasecmp(targets, pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental %s requires a single exact PCI target\n",
+				id->name);
 			continue;
 		}
 		if (!all && !listed(pci_name(pdev)))
