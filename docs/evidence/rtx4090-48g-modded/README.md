@@ -1,0 +1,80 @@
+# Modified 48 GB RTX 4090 (`10de:2684`): transaction, rate readback and workload result
+
+A Chinese-market **modified RTX 4090 with 48 GB of memory** (AD102, `10de:2684`, VBIOS
+`95.02.3C.00.02`) completed the reviewed module's firmware transaction and handed the card to the
+stock NVIDIA driver. This answers [issue #17](https://github.com/JustAResearcher/gpu-unlock-ada/issues/17)
+and adds the one measurement the existing RTX 4090 evidence does not have: what the unlock does to a
+real quantized inference workload.
+
+Executed module source: revision `4e7fefcc4923f9e083d5324dc75a7d2f906af77f` (v1.1.1). Environment:
+Ubuntu 26.04.1, Linux `7.0.0-38-generic`, NVIDIA `610.57.04` open kernel modules (DKMS), CUDA 13.2,
+450 W power limit, stock clocks.
+
+## Boot and correctness evidence
+
+The module and all nine pinned firmware assets were installed into the regular-kernel initramfs for
+`7.0.0-38-generic` and loaded before NVIDIA. The selected card reported the transaction and
+`gpu_unlock: unlocked` ([excerpt](unlocked-boot-excerpt.txt)), and the public RM getter readback
+changed from `fmla32=1, imla2=1, imla4=1` (half rate) to `0/0/0` (full rate). Both readbacks are
+included. No `NVRM: Xid` lines appeared in the boot journal before or after the benchmark suite.
+Six seeded FP16/BF16 numerical cases passed with `failures=0, max_abs=0` in both states.
+
+## Instruction throughput (`mma_bench`, 20,000 iterations, best of five repetitions)
+
+| Mode | Stock | Unlocked | Ratio |
+|---|---:|---:|---:|
+| `f16/f16` | 330.8 TF/s | 330.8 TF/s | 1.000× |
+| `f16/f32` | 164.9 TF/s | 328.9 TF/s | 1.995× |
+| `bf16/f32` | 164.8 TF/s | 328.7 TF/s | 1.995× |
+| `s8/s32` | 659.4 TF/s | 657.7 TF/s | 0.997× |
+| `dp4a` | 164.0 TF/s | 163.5 TF/s | 0.997× |
+| `ffma` | 78.5 TF/s | 78.6 TF/s | 1.001× |
+
+Only the FP16/BF16-input, FP32-accumulate modes change. `f16/f16` was already at full rate, and the
+INT8, dp4a and scalar controls are unaffected, which is the expected signature of this limiter.
+
+## cuBLAS (`gemm_bench`, 10 warm-ups, 20 iterations per timing, median of 5)
+
+| Shape | Stock | Unlocked | Ratio |
+|---|---:|---:|---:|
+| FP16/FP32 1024³ | 103.8 | 131.5 | 1.266× |
+| BF16/FP32 1024³ | 120.2 | 157.7 | 1.312× |
+| FP16/FP32 4096³ | 154.3 | 216.3 | 1.401× |
+| BF16/FP32 4096³ | 155.0 | 155.3 | 1.002× |
+| FP16/FP32 8192³ | 173.6 | 189.6 | 1.092× |
+| BF16/FP32 8192³ | 169.2 | 187.7 | 1.109× |
+
+FP16 8192³ gains less than FP16 4096³, which is consistent with a memory-bandwidth roof at that
+shape. BF16 4096³ is the one case that did not improve, reproducing at 155.0 and 157.4 TF/s in two
+separate runs while FP16 4096³ reached 215-216 TF/s; no explanation is claimed here.
+
+## Card safety, and the abort paths
+
+- The transaction completed with `full=1`, `valid=1` on every AD102 permission readback before the
+  driver bound the card; the rate readback after driver start is full rate.
+- About 30 minutes of continuous load followed (four serving matrices, several GEMM sweeps) with
+  zero `NVRM: Xid` lines, zero numerical mismatches, 46 °C board temperature.
+- The machine was powered off for at least 30 s before the attempt. Physical AC removal was not
+  independently observed, and a warm reboot was not tested.
+- The module's rejection paths (VBIOS/FWSEC mismatch, already-bound card, stale firmware state) are
+  covered by the host test suite (`make test-full`, 29 passed), not exercised on this silicon.
+- If the module ever reports that firmware did not stop, power the machine off instead of unloading
+  it: the module intentionally keeps DMA buffers that firmware may still use.
+
+## Workload result: no gain on a quantized MoE serving stack
+
+[Full table and method](serving-workload.md). Summary: prefill at 8K and 32K is within 1–2% of stock,
+decode spread exceeds any effect, and the CPU/GPU-expert overlap that dominates this model does not
+use the unlocked tensor path. The unlock is real; this workload does not consume it.
+
+## Limits
+
+- One modified 48 GB board, one cold boot, one kernel/driver combination.
+- About 30 minutes of load after the unlock; no long-duration stability run.
+- No warm-reboot persistence test and no repeated cold-boot test were performed.
+- The stock serving sample is a single run on a long-running engine; the unlocked side is a fresh engine measured over three passes. Expert-cache residency differs, so small-prompt differences are not attributable to the unlock.
+- Decode throughput varied by about 12% between identical passes; no decode claim is made.
+- No claim about unquantized (FP16/BF16) workloads, other engines, training, lifetime reliability, or maximum board power.
+
+Raw payloads, hashes of the module, all nine firmware assets and the benchmark binaries are in
+[`metadata.json`](metadata.json) and [`SHA256SUMS`](SHA256SUMS).

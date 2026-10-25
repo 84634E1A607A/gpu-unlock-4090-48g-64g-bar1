@@ -28,6 +28,16 @@ matched run pair with the desktop active, not whole-application speedups or
 an extended stability test. See the [matched evidence and limits](docs/evidence/rtx4090-pr1-matched/README.md)
 and [testing workflow](docs/testing.md).
 
+A modified 48 GB RTX 4090 (`10de:2684`, AD102) on Ubuntu 26.04 with Linux
+`7.0.0-38-generic` and NVIDIA `610.57.04` open kernel modules also completed the
+transaction and driver handoff on 2026-10-25: `fmla32` went from `1` to `0`,
+FP16/FP32 instruction throughput **164.9 → 328.9 TF/s**, BF16/FP32
+**164.8 → 328.7 TF/s**, with INT8, `dp4a` and scalar unchanged and no Xid. A
+quantized mixture-of-experts serving workload on the same card showed **no**
+gain (8K prefill 0.983×), which is consistent with quantized matmuls not
+consuming the FP32-accumulate tensor path. That is one card, one cold boot and
+one workload. See the [modified-card evidence and limits](docs/evidence/rtx4090-48g-modded/README.md).
+
 A separate cold test of the Ada port on one RTX 4070 Ti SUPER
 (`10de:2705`) with NVIDIA `580.178.04` measured FP16/FP32 tensor issue rate
 at **95.0 → 189.9 TF/s** and BF16/FP32 at **95.0 → 189.7 TF/s** under the
