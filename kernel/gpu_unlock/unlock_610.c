@@ -348,7 +348,7 @@ static bool inaccessible(u32 value)
 static bool is_ad102(const struct unlock_transaction_work *work)
 {
 	/* AD103, AD104 and AD106 select the pinned AD102-family Booter archive.
-	 * AD104 and AD106 remain unvalidated on silicon. */
+	 * AD104 is validated on one RTX 4070; other boards remain unqualified. */
 	return work->pdev->device == GU_AD102_RTX_4090 ||
 	       work->pdev->device == GU_AD102_RTX_4090_D ||
 	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER ||

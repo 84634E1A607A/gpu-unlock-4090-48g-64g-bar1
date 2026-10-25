@@ -36,7 +36,7 @@ def main() -> int:
         label = {"2684": "RTX 4090",
                  "2685": "RTX 4090 D (experimental)",
                  "2705": "RTX 4070 Ti SUPER (experimental)",
-                 "2786": "RTX 4070 (experimental, hardware validation pending)",
+                 "2786": "RTX 4070 (experimental)",
                  "2805": "RTX 4060 Ti 16GB (experimental)"}[device]
         if device == "2685":
             options += " gpu_unlock.rtx4090d_experimental=1"

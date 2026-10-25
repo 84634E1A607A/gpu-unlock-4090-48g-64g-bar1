@@ -14,7 +14,7 @@ MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103_experimental, "permit exact 10de:2705 AD103 or 10de:2786 AD104 with a single explicit PCI address; AD104 unvalidated on silicon");
+MODULE_PARM_DESC(ad103_experimental, "permit exact 10de:2705 AD103 or 10de:2786 AD104 with a single explicit PCI address; AD104 validated on one card");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
 MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
@@ -178,5 +178,5 @@ static void __exit gpu_unlock_exit(void)
 module_init(gpu_unlock_init);
 module_exit(gpu_unlock_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070 Ti SUPER and supported GA10x pre-driver tensor unlock");
+MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070/Ti SUPER and supported GA10x pre-driver tensor unlock");
 MODULE_VERSION("1.1.1");

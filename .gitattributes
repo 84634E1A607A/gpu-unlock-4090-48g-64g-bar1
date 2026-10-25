@@ -38,3 +38,6 @@
 /docs/evidence/ad104-windows/** -text whitespace=cr-at-eol,-blank-at-eof
 /windows/ad104-msi/benchmark.py -text
 /windows/ad104-msi/vendor/edk2/** -text whitespace=cr-at-eol,-blank-at-eof
+
+# Preserve exact native RTX 4070 evidence bytes across platforms.
+/docs/evidence/ada2786/* -text
