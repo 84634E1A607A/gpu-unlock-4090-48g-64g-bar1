@@ -78,6 +78,8 @@ The module selects the AD102 firmware and payload automatically for RTX 4090
 `10de:2684`. The original GeForce/CMP GA102/GA104 device list and GA102 payload
 are retained, along with the newer GA103/GA106 device list. Upstream reported
 RTX 3090 success; this branch does not revalidate every legacy board.
+GA107 RTX 3050 6GB (`10de:2584`) uses the same GA102 Booter path and was
+unlocked on one card ([2584 report](docs/ga107-2584-report.md)).
 
 RTX 4090 D (`10de:2685`) uses the AD102 path with the experimental opt-in
 `gpu_unlock.rtx4090d_experimental=1`. Select cards with `gpu_unlock.targets=`.
