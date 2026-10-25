@@ -56,6 +56,12 @@ warm reboots, the last from a persistent EFI default. Throughput was measured
 on the first cold boot. See the [2705 canary report](docs/ada-2705-report.md)
 and its [sanitized raw benchmark output](docs/evidence/ada2705/README.md).
 
+RTX 4090 Laptop GPU (`10de:2757`, AD103M) is **experimental**, with differing
+board results: the Clevo run completed the unlock but showed no throughput
+change (see the [2757 report](docs/ada-2757-report.md)), while a
+[Lenovo owner report](https://github.com/JustAResearcher/gpu-unlock-ada/issues/4#issuecomment-6397961415)
+measured 2× FP16/BF16 tensor throughput with FP32 accumulation on two cold boots.
+
 The AD102 payload and its debug-booter analysis come from
 **[TOTORONG/AD103_win_unlocker](https://huggingface.co/TOTORONG/AD103_win_unlocker)**.
 This fork integrates that published payload into

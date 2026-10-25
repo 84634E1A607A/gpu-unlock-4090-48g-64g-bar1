@@ -32,6 +32,9 @@ MODULE_PARM_DESC(ad107_experimental, "permit the exact 10de:28e1 (RTX 4050) or 1
 static bool rtx4070tis_ad102_experimental;
 module_param(rtx4070tis_ad102_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit only the exact 10de:2689 AD102 RTX 4070 Ti SUPER with a single explicit PCI address");
+static bool ad103m_experimental;
+module_param(ad103m_experimental, bool, 0444);
+MODULE_PARM_DESC(ad103m_experimental, "permit only the exact 10de:2757 AD103M mobile variant with a single explicit PCI address; experimental canary");
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
@@ -81,6 +84,7 @@ static const struct experimental_id {
 	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
 	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
 	{ GU_AD104_RTX_4070_SUPER, &ad104_experimental, true, "AD104" },
+	{ GU_AD103M_RTX_4090_MOBILE, &ad103m_experimental, true, "AD103M mobile" },
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);
