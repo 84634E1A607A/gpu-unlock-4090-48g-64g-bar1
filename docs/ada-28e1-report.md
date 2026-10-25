@@ -135,11 +135,11 @@ This walkthrough documents the exact, verified procedure used to unlock the RTX 
 - **NVIDIA Driver:** Stock NVIDIA open kernel module (`nvidia-open`, version 560+ or 615+).
 - **Bootloader:** Limine, GRUB, or systemd-boot.
 
-### 2. Switch MUX to Discrete GPU (dGPU Only Mode)
-Before applying the patch, configure your laptop's display routing:
-1. Boot into BIOS setup (press <kbd>F2</kbd> or <kbd>Del</kbd> at startup) or use `supergfxctl` / ASUS Armoury Crate / G-Helper in Windows.
-2. Set GPU mode to **"Ultimate"** or **"Discrete GPU Only" (dGPU)**.
-3. *Why this matters:* In hybrid / Optimus mode, the dGPU may be placed into D3cold power-saving state during early initramfs boot, gating its BAR0 VBIOS ROM aperture. Switching to dGPU mode ensures the RTX 4050 is active on the PCIe bus from the first stage of boot.
+### 2. Switch ASUS MUX to Discrete GPU (Dedicated / Ultimate Mode)
+On ASUS TUF / ROG laptops equipped with a hardware MUX switch, display routing must be locked directly to the dedicated GPU:
+1. Boot into ASUS BIOS setup (press <kbd>F2</kbd> during startup) -> Advanced Settings -> Display Mode, or use ASUS Linux tools: `supergfxctl -m Dedicated`.
+2. Set GPU mode to **"Ultimate"** or **"Dedicated" (dGPU only)**.
+3. *Why this matters on ASUS:* In Standard / Hybrid (Optimus) mode, the ASUS Embedded Controller (EC) places the dGPU into an ACPI D3cold power-saving state during early boot, gating the physical BAR0 VBIOS ROM aperture. Switching the ASUS hardware MUX to Ultimate forces the RTX 4050 to initialize as the primary PCI display device from the very first millisecond of boot, ensuring BAR0 + `0x300000` is fully exposed.
 
 ### 3. Build & Install the Kernel Module
 Clone the repository and build the native packages or DKMS module:
