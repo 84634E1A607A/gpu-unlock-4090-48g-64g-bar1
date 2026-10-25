@@ -1,0 +1,102 @@
+{
+  "state": "stock",
+  "started_utc": "2026-10-25T10:47:40.005579+00:00",
+  "kernel": "7.2.11-arch1-1",
+  "power_limit_W": 165,
+  "iterations": 20000,
+  "repetitions": 3,
+  "gpu_unlock_kernel_options": [],
+  "clock_and_power_settings_changed": false,
+  "source_commit": "b33b162505cbf96f38728e5a4ceca32e97ce7b28",
+  "benchmark_hashes": {
+    "diagnostics/bench/tensor_modes_issue.cu": "46cc852ec15ba2d12a259d7698e8fcd2104dfb07a5947a38d46c7bd6b5f5462f",
+    "diagnostics/bench/tensor_modes_driver_runner.py": "1f5340454ddf4fc2310eec8694a3bdf84ec0abcfcf3aae980939d1840ff3305d",
+    "tools/read_sm_rates.py": "1e5ef78dfcbe8ce5960fd81c81eb1ede86f08babbb8715d7e40ac1e8f9329421",
+    "bin/tensor_modes_issue_sm89.ptx": "d0adaf4bd42da19f60f3e1c623388aad5d290b3531f3f6f3bffca6bf86334ea8",
+    "bin/tensor_modes_issue_sm89.cubin": "33aa6db385aa9eb8a1f73bb2f74891aea84794326b7c40992bc642f93a3c614d"
+  },
+  "rates_before": {
+    "imla0": 0,
+    "fmla16": 0,
+    "dp": 0,
+    "fmla32": 1,
+    "ffma": 0,
+    "imla1": 0,
+    "imla2": 1,
+    "imla3": 0,
+    "imla4": 1
+  },
+  "telemetry_command": [
+    "nvidia-smi",
+    "-i",
+    "GPU-UUID-OMITTED",
+    "--query-gpu=timestamp,clocks.sm,clocks.mem,temperature.gpu,power.draw,power.limit,utilization.gpu,memory.used,pstate",
+    "--format=csv,nounits",
+    "-lms",
+    "100"
+  ],
+  "command": [
+    "python3",
+    "diagnostics/bench/tensor_modes_driver_runner.py",
+    "bin/tensor_modes_issue_sm89.cubin",
+    "--sha256",
+    "33aa6db385aa9eb8a1f73bb2f74891aea84794326b7c40992bc642f93a3c614d",
+    "--expect-uuid",
+    "GPU-UUID-OMITTED",
+    "--expect-power-limit",
+    "165",
+    "--iters",
+    "20000",
+    "--reps",
+    "3"
+  ],
+  "returncode": 0,
+  "finished_utc": "2026-10-25T10:47:41.696507+00:00",
+  "rates_after": {
+    "imla0": 0,
+    "fmla16": 0,
+    "dp": 0,
+    "fmla32": 1,
+    "ffma": 0,
+    "imla1": 0,
+    "imla2": 1,
+    "imla3": 0,
+    "imla4": 1
+  },
+  "journal_check_returncode": 1,
+  "journal_matching_lines": [],
+  "journal_stderr": "",
+  "build_commands": [
+    [
+      "nvcc",
+      "-ptx",
+      "-arch=sm_89",
+      "-O3",
+      "-std=c++17",
+      "-o",
+      "bin/tensor_modes_issue_sm89.ptx",
+      "diagnostics/bench/tensor_modes_issue.cu"
+    ],
+    [
+      "ptxas",
+      "-arch=sm_89",
+      "-O3",
+      "-o",
+      "bin/tensor_modes_issue_sm89.cubin",
+      "bin/tensor_modes_issue_sm89.ptx"
+    ]
+  ],
+  "gpu": "NVIDIA GeForce RTX 4060 Ti 16GB",
+  "device_id": "10de:2803",
+  "driver": "615.78.08",
+  "CUDA_toolkit": "13.4.92",
+  "cubin_matches_ada2805": true,
+  "sanitization": "GPU UUID replaced with GPU-UUID-OMITTED, actual PCI address replaced with <target>, and build paths normalized to bin/. Runner stdout otherwise unchanged.",
+  "telemetry_time_zone": "Asia/Singapore, UTC+08:00; nvidia-smi local timestamps retained. Stage timestamps are UTC.",
+  "limits": [
+    "One stock tensor-mode run on one card; no same-card unlocked measurement.",
+    "The 2805 uses a different card and driver; matching the cubin does not establish a matched speedup comparison.",
+    "Instruction issue rates and all-one output checks do not establish application performance or general numerical accuracy."
+  ],
+  "benchmark_sources_match_source_commit": true
+}
