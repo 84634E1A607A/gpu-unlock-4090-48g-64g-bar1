@@ -119,8 +119,22 @@ active in 89 of 197 loaded samples (stock) and 75 of 149 (unlocked), so the
 large GEMMs are power-limited and gain far less than 2×. The 1024 runs are
 short and noisy.
 
+## Warm reboot with the module in the boot path
+
+The boot options were then made permanent
+(`GRUB_CMDLINE_LINUX_DEFAULT="gpu_unlock.targets=0000:01:00.0"`) and the host
+was rebooted once with `systemctl reboot`. The boot also moved to the pending
+kernel `6.8.0-147-generic`, for which DKMS had already built the module. The
+platform reset cleared the card: the entry readback was `SS0=0x0`, `SS1=0x0`,
+WPR2 high `0x0`. The module ran the full transaction again from initramfs
+before `nvidia` loaded and ended with `gpu_unlock: unlocked`; the RM getter
+again reported every field at full rate and the boot had no NVRM Xid. No AC
+power cut was needed. The boot excerpt is `transaction-excerpt-boot.txt` and
+the readback `sm-rates-boot.json` in the evidence directory.
+
 ## Not yet done
 
+- a cold-boot (AC cut) attempt;
 - an extended stability run and application workloads such as training;
 - other GA107 boards (for example the 8 GB GA107 RTX 3050, `10de:2582`), which
   are not admitted by this change.

@@ -28,5 +28,9 @@ de6ac71f7488359ad1e63ba79ee1e2ea75be7748f2b9fcdff19a5138f866af52  tensor_modes_i
 - `transaction-excerpt.txt`: this card's kernel messages from the `entry:`
   line to `gpu_unlock: unlocked`, with FWSEC ROM parsing and DMA lines removed.
   It is an excerpt, not a complete kernel log, and contains no host name.
+- `transaction-excerpt-boot.txt` and `sm-rates-boot.json`: the same excerpt
+  and readback from the next boot (warm `systemctl reboot`, kernel
+  `6.8.0-147-generic`, module loaded from initramfs with
+  `gpu_unlock.targets=` on the kernel command line).
 
 `SHA256SUMS` covers every other file in this directory.
