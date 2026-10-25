@@ -1,4 +1,4 @@
-# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER and RTX 4060 Ti 16GB
+# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER, RTX 4070 Ti and RTX 4060 Ti 16GB
 
 New to this project? Start with the [copy-paste Quick Start](QUICKSTART.md).
 
@@ -88,6 +88,15 @@ permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
 the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
 same-card stock throughput run has been made yet. See the
 [2805 report](docs/ada-2805-report.md).
+
+RTX 4070 Ti `10de:2782` is an **experimental AD104 target validated on one
+card**. It uses the same AD102-family payload and requires both
+`gpu_unlock.ad104_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. On the tested ASUS card, passed through by VFIO to a KVM
+guest, one cold boot passed every gate with the NVIDIA 595.99.02 driver. A
+matched stock/unlocked run measured FP16/BF16/TF32 FP32-accumulate instruction
+rates doubled and large cuBLAS FP16/BF16 GEMMs +93-94%. A later guest reboot
+kept the unlock. See the [2782 report](docs/ada-2782-report.md).
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
@@ -153,8 +162,8 @@ gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. RTX 4070 Ti SUPER `10de:2705` and RTX 4060 Ti 16GB `10de:2805` each
-require their own experimental flag and a single exact PCI address; `all` never
+addresses. RTX 4070 Ti SUPER `10de:2705`, RTX 4070 Ti `10de:2782` and RTX 4060 Ti 16GB
+`10de:2805` each require their own experimental flag and a single exact PCI address; `all` never
 selects them. Invalid entries
 are logged and ignored.
 
