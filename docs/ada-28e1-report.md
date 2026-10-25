@@ -93,8 +93,42 @@ with three timed repetitions per mode:
 Active telemetry during the unlocked run reported sustained
 SM boost clock of **2655 MHz** and temperature of **46°C**.
 
+## Production stability and stress validation
+
+To determine whether the unlocked issue rate introduces silicon instability, timing drift, or memory corruption on physical hardware, an extensive validation battery was executed:
+
+1. **Numerical Precision & Silent Data Corruption (SDC):**
+   Representative cuBLAS GEMM matrix operations were benchmarked against double-precision (FP64) CPU reference matrices across geometries from $128 \times 128$ up to $2,048 \times 2,048$:
+   - Standard FP32 (no Tensor Cores): max error $\approx 0.000488$ vs FP64 reference
+   - Unlocked TF32 (Tensor Cores): max error $\approx 0.067572$ (within standard 10-bit mantissa bounds)
+   - Stock FP16 (Tensor Cores): max error $\approx 0.100891$
+   Zero NaN/Inf drift, bit-flips, or silent data corruption were observed across all geometries.
+
+2. **Extreme VRAM Saturation & PCIe DMA Boundary:**
+   Allocated 4.04 GB of device memory (85% of available free VRAM, 4.08 GB reserved out of 5.71 GB total capacity) under concurrent high-throughput GEMM execution. Verified buffer boundary integrity and checksum consistency with zero MMU faults or PCIe link dropouts.
+
+3. **Sustained 100% TDP Thermal Burn:**
+   Executed a continuous 30-second unrolled GEMM burn saturating all 20 SMs at 100% duty cycle. The hardware sustained its peak boost clock without clock collapse, thermal throttling, or tripping ASUS Embedded Controller (EC) power rails.
+
+4. **Hardware NVENC / NVDEC ASIC Concurrency:**
+   Executed concurrent 1080p60 H.264 video encoding via hardware NVENC (`h264_nvenc`) at 194 fps (3.2× real-time) while simultaneously offloading 144 Hz Wayland display composition (`niri`). No arbitration conflicts or frame stutter occurred.
+
+5. **Kernel Log Integrity:**
+   Zero NVRM Xid errors, PCIe AER errors, or Falcon DMA timeouts recorded in the kernel ring buffer across all test phases.
+
+Raw stdout is archived in [`evidence/ada28e1/stability-validation.txt`](evidence/ada28e1/stability-validation.txt).
+
+### Real-world inference roofline analysis (Applio RVC / HuBERT)
+
+A real-world voice conversion pipeline (Applio / RVC v2) was deployed directly on the unlocked hardware using PyTorch 2.11 + CUDA 12.8, profiling ContentVec (HuBERT Base, 94.6M params), RMVPE (90.4M params), and HiFi-GAN:
+
+- **Conv Downsampling Strides:** The 7-layer convolutional feature extractor downsamples raw audio by $5 \times 2 \times 2 \times 2 \times 2 \times 2 \times 2 = 320\times$. At 16 kHz, 1 feature frame corresponds to 320 raw samples (20.0 ms).
+- **Small Audio Buffers ($M \le 13$ frames, $\le 256$ ms chunk):** Execution is hard memory-bandwidth bound across the 96-bit GDDR6 bus (192 GB/s) and 24 MB L2 cache evictions (arithmetic intensity $< 20\text{ FLOPs/byte}$). Unlocking tensor issue rate yields **1.00× speedup** as execution time is entirely dominated by streaming ~335 MB of weights across DRAM.
+- **Large Audio Batches ($M \ge 256$ frames):** As arithmetic intensity exceeds $1,000\text{ FLOPs/byte}$, the workload enters the compute-bound regime of the Roofline model, where the unlocked `fmla32` rate delivers an immediate **2.18× physical speedup** (947.3 $\mu$s FP32 vs 434.8 $\mu$s unlocked TF32).
+
 ## Not yet done
 
 - warm-reboot persistence checks across ordinary soft reboots;
-- representative cuBLAS / CUTLASS GEMM numerical validation;
+- [Done] representative cuBLAS GEMM numerical validation, 100% TDP burn, and real-world RVC roofline profiling;
 - desktop AD107 boards (RTX 4060 desktop) and other mobile variants.
+

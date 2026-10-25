@@ -31,4 +31,9 @@ driver `615.78.08`, and stable thermals.
 `lspci-device.txt` contains verbose `lspci -vvv -nn -s 0000:01:00.0` output verifying
 chip identity (`10de:28e1`), ASUS subsystem ID (`1043:14f4`), BAR0 layout, and PCIe capabilities.
 
+`stability-validation.txt` contains raw stdout from the production stress battery,
+recording cuBLAS numerical precision checks against FP64 reference, 4.04 GB VRAM
+boundary saturation, 30-second 100% TDP burn, NVENC ASIC encoding, and zero Xid kernel checks.
+
 `SHA256SUMS` covers every other file in this directory.
+
