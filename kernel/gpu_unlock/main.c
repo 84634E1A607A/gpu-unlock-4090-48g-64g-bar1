@@ -124,7 +124,7 @@ static void report_unmatched(void)
 		if (pdev)
 			pci_dev_put(pdev);
 		else
-			pr_err("gpu_unlock: no supported card at \".*s\"\n",
+			pr_err("gpu_unlock: no supported card at \"%.*s\"\n",
 			       (int)(end - entry), entry);
 	}
 }
