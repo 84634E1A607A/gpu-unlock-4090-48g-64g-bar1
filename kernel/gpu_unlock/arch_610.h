@@ -11,6 +11,8 @@ enum gpu_unlock_booter_arch {
 #define GU_AD103_RTX_4070_TI_SUPER 0x2705u
 /* Experimental AD103 target; validated on one modified 32 GiB card only. */
 #define GU_AD103_RTX_4080 0x2704u
+/* Exact experimental AD104 target; one RTX 4070 validated on Linux. */
+#define GU_AD104_RTX_4070 0x2786u
 /* Exact experimental AD106 target, untested on silicon. */
 #define GU_AD106_RTX_4060_TI_16GB 0x2805u
 /* Exact experimental AD107 target, untested on silicon. */

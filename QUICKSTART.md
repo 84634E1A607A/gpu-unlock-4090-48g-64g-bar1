@@ -7,6 +7,8 @@ RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
 card ([2805 report](docs/ada-2805-report.md)). RTX 4050 Mobile `10de:28e1`
 is experimental and has been unlocked on **one** board ([28e1 report](docs/ada-28e1-report.md)).
 RTX 4060 Mobile `10de:28e0` is also an experimental AD107 target enabled under the same flag.
+RTX 4070 non-Ti `10de:2786` is experimental and validated on one Gigabyte card
+on native Linux ([2786 report](docs/ada-2786-report.md)).
 Other Ada IDs remain disabled except for the listed experiments.
 The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
@@ -29,6 +31,7 @@ Find the line for your GPU. The full address is the first field, such as
 RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
 `10de:2704` for the experimental RTX 4080 path,
 `10de:28e1` (RTX 4050 Mobile) or `10de:28e0` (RTX 4060 Mobile) for the experimental AD107 path,
+`10de:2786` for the experimental RTX 4070 non-Ti path,
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -71,6 +74,10 @@ kernel command line, replacing the sample address with yours:
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
 ```
+
+For an RTX 4070 non-Ti `10de:2786`, use the same two options above. This
+shares the existing AD103 opt-in as tested, but admits only the exact 2786
+AD104 PCI ID; it does not enable other AD104 cards.
 
 For an RTX 4060 Ti 16GB `10de:2805`, use its own experimental flag instead:
 

@@ -333,6 +333,31 @@ int main(void)
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad103: gated exact-card dispatch PASS");
 
+	/* AD104 must stay opt-in and reject all, lists, wrong BDFs and bound cards. */
+	char *ad104_targets[] = {"all", "0000:01:00.0,0000:02:00.0", "0000:02:00.0", "0000:01:00.0"};
+	for (unsigned int flag = 0; flag < 2; flag++) {
+		for (unsigned int t = 0; t < ARRAY_SIZE(ad104_targets); t++) {
+			reset(ad104_targets[t]);
+			ad103_experimental = flag;
+			add("0000:01:00.0", GU_AD104_RTX_4070, false);
+			bool expected = flag && t == 3;
+			fake.expected_concurrent = expected;
+			run();
+			assert(fake.loads == expected && fake.started == expected);
+		}
+	}
+	reset("0000:01:00.0");
+	ad106_experimental = true;
+	add("0000:01:00.0", GU_AD104_RTX_4070, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("0000:01:00.0");
+	ad103_experimental = true;
+	add("0000:01:00.0", GU_AD104_RTX_4070, true);
+	run();
+	assert(!fake.started && logged("unlock failed (-16)"));
+	puts("ad104: experimental flag, single-BDF and bound-driver guards PASS");
+
 	/* The AD106 target needs its own flag and exactly one BDF. */
 	reset("0000:01:00.0");
 	add("0000:01:00.0", RTX_4060TI_16GB, false);

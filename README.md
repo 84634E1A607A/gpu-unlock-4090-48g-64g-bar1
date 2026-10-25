@@ -90,6 +90,16 @@ two cold boots and later warm reboots confirmed driver 580.178.04 handoff and
 full-rate readbacks; matched throughput was measured across stock and unlocked
 boots. Other boards remain unverified.
 
+RTX 4070 **non-Ti** `10de:2786` is an **experimental AD104 target validated
+on one Gigabyte card** under CachyOS / NVIDIA `615.78.08`. It uses the existing
+AD102-family assets and, as hardware-tested, shares the
+`gpu_unlock.ad103_experimental=1` opt-in with the AD103 canary. Select one exact
+PCI address; `targets=all` never selects it. One cold boot passed the firmware,
+permission, HALT, selector and post-FLR checks. Independent RM rates changed
+from half to full, and matched FP16/FP32 and BF16/FP32 instruction throughput
+approximately doubled. This is not a whole-application speedup or general AD104
+compatibility claim. See the [2786 report](docs/ada-2786-report.md).
+
 RTX 4060 Ti 16GB `10de:2805` is an **experimental AD106 target validated on one
 card**. It uses the same AD102-family payload and requires both
 `gpu_unlock.ad106_experimental=1` and a single exact PCI address; `targets=all`
@@ -187,10 +197,8 @@ gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. RTX 4070 Ti SUPER `10de:2705`, RTX 4060 Ti 16GB `10de:2805`, and
-RTX 4080 `10de:2704` each
-require their own experimental flag and a single exact PCI address; `all` never
-selects them. Invalid entries
+addresses. Every experimental Ada target requires its own experimental flag and
+a single exact PCI address; `all` never selects them. Invalid entries
 are logged and ignored.
 
 The packages support these initramfs generators:
