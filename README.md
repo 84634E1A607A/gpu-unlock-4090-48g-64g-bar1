@@ -1,4 +1,4 @@
-# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER and RTX 4060 Ti 16GB
+# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER, RTX 4060 Ti 16GB and RTX 4050 Mobile
 
 New to this project? Start with the [copy-paste Quick Start](QUICKSTART.md).
 
@@ -52,16 +52,6 @@ This fork integrates that published payload into
 **[Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock)**'s Linux module,
 firmware generation and boot packaging. The payload is essential to the result.
 
-## Experimental Windows contribution — Latence.app
-
-A separate [MSI RTX 4070 Ti AD104 Windows UEFI reference port](windows/ad104-msi/README.md)
-records one successful manual boot with NVIDIA 616.56 and matched cuBLAS FP16/FP32
-**+80.1%**, BF16/FP32 **+76.4%** measurements. It is tied to one captured MSI Z490
-profile; it does **not** add AD104 admission to the Linux module. See the
-[report and limitations](docs/ad104-windows-latence-app.md). No firmware/Windows/ROM
-binaries or automatic boot installer are distributed. Contribution by **Latence.app**;
-original upstream credits and licences are retained.
-
 ## Supported targets
 
 The module selects the AD102 firmware and payload automatically for RTX 4090
@@ -88,6 +78,18 @@ permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
 the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
 same-card stock throughput run has been made yet. See the
 [2805 report](docs/ada-2805-report.md).
+
+RTX 4050 Mobile `10de:28e1` is an **experimental AD107 target validated on one
+machine (ASUS TUF Gaming A16 FA607NUG, AMD Ryzen 7 7445HS)**. It requires both
+`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. One cold boot passed every marker, permission, selector and
+post-FLR gate, the NVIDIA 615.78.08 driver loaded, and the RM getter changed
+FMLA32, IMLA2 and IMLA4 from half to full rate. Matched SM89 issue-rate
+benchmarks showed a 2.00× speedup for FP16/FP32 accumulate (26.5 → 53.0 TF/s) and
+TF32/FP32 accumulate (13.2 → 26.4 TF/s). **Warning:** Due to OEM laptop
+hardware variance in VBIOS ROM aperture exposure (BAR0 + `0x300000`), EC power rails,
+and PCIe root complex FLR handling, this may not work on other laptop models
+without prior hardware verification. See the [28e1 report](docs/ada-28e1-report.md).
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
