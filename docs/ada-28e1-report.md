@@ -169,12 +169,18 @@ gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
 ```
 *(Recommendation: Create a dedicated safe boot entry in your bootloader so you can select stock if needed).*
 
-### 5. Mandatory Cold Boot & EC Hardware Reset
-Soft rebooting (`reboot`) does **not** discharge volatile security registers on laptops because the Embedded Controller (EC) keeps 3.3V standby rails powered. You must execute a complete EC discharge:
-1. Shut down the system completely (`poweroff`).
-2. **Unplug the AC power adapter.**
-3. **Press and hold the laptop power button for 40 continuous seconds.** (This discharges motherboard capacitors, resets the EC power rails, and unlatches the SEC2 processor).
-4. Reconnect the AC adapter and power on.
+### 5. Mandatory Cold Boot & EC Hardware Reset (OEM-Specific)
+Soft rebooting (`reboot`) does **not** discharge volatile security registers on laptops because the Embedded Controller (EC) keeps 3.3V auxiliary standby power rails active. A full cold hardware reset is required to unlatch the SEC2 falcon processor.
+
+**Note that the EC reset procedure differs significantly across laptop manufacturers:**
+- **ASUS TUF / ROG (Verified on FA607NUG):** Shut down completely, unplug the AC adapter, and hold the chassis power button for **40 continuous seconds** (ASUS EC power-plane discharge).
+- **Lenovo Legion / LOQ:** Unplug AC, press and hold power button for 30–60 seconds, or use the bottom/side Novo button pinhole.
+- **Dell / Alienware:** Unplug AC, hold power button for 30–35 seconds until the front/battery LED pulses 3 times (RTC/EC hard reset).
+- **MSI:** Unplug AC, insert a paperclip into the dedicated battery/EC reset pinhole on the bottom cover for 30 seconds.
+- **HP Victus / Omen & Acer Nitro:** Unplug AC and hold power button for 15–25 seconds (or use chassis battery reset pinhole).
+
+After the EC reset, reconnect the AC adapter and power on.
+
 
 ### 6. Verification
 Boot into your unlocked kernel entry and verify:
