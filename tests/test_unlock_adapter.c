@@ -45,6 +45,7 @@ static u64 mask;
 static struct pci_dev dev;
 static bool fake_ada_id(void) {
     return dev.device==GU_AD102_RTX_4090 ||
+           dev.device==GU_AD103_RTX_4080 ||
            dev.device==GU_AD103_RTX_4070_TI_SUPER ||
            dev.device==GU_AD106_RTX_4060_TI_16GB;
 }
@@ -285,6 +286,12 @@ static void check_published_image(void) {
         assert(!memcmp((u8 *)w->booter_cpu+w->booter_hdr.patch_loc,
                        w->booter_fw->data+72+w->booter_image_size,384));
         assert(w->booter_image_size==0xde00 && w->boot_desc.image_size==36864);
+        if(dev.device==GU_AD103_RTX_4080) {
+            assert(get64(meta+176)==(32ull<<30));
+            assert(get64(meta+184)==0x7fff00000ull);
+            assert(get64(meta+152)==0x7ffe00000ull);
+            assert(get64(meta+168)==0x7fff00000ull);
+        }
         return;
     }
     assert(get64(meta+112)==0x5f5400000ull && get64(meta+136)==0x5fada0000ull);

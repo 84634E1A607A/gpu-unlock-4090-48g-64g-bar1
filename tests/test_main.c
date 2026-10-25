@@ -202,6 +202,7 @@ static void reset(char *list)
 	memset(&fake, 0, sizeof(fake));
 	device_count = 0;
 	targets = list;
+	rtx4080_experimental = false;
 	ad103_experimental = false;
 	ad106_experimental = false;
 }
@@ -354,6 +355,31 @@ int main(void)
 	run();
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad106: gated exact-card dispatch PASS");
+
+
+    /* The local 4080 port never broadens the existing AD103 flag or all. */
+    reset("0000:01:00.0");
+    ad103_experimental = true;
+    add("0000:01:00.0", GU_AD103_RTX_4080, false);
+    run();
+    assert(!fake.loads && !fake.started);
+    reset("all");
+    rtx4080_experimental = true;
+    add("0000:01:00.0", GU_AD103_RTX_4080, false);
+    run();
+    assert(!fake.loads && !fake.started);
+    reset("0000:01:00.0,0000:02:00.0");
+    rtx4080_experimental = true;
+    add("0000:01:00.0", GU_AD103_RTX_4080, false);
+    run();
+    assert(!fake.loads && !fake.started);
+    reset("0000:01:00.0");
+    rtx4080_experimental = true;
+    add("0000:01:00.0", GU_AD103_RTX_4080, false);
+    fake.expected_concurrent = 1;
+    run();
+    assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+    puts("RTX 4080: separate opt-in and exact PCI target PASS");
 
 	/* No opt-in on the command line: the module does nothing. */
 	for (int empty = 0; empty < 2; empty++) {

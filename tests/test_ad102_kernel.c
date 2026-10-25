@@ -158,6 +158,37 @@ int main(int argc, char **argv)
         assert(!fake.live && !fake.fw_live && dev.refs==1);
         puts("AD103 0x2705 profile dispatch under mocked registers PASS");
         {
+        /* Synthetic AD103/A1 and 32 GiB geometry, not measured board values.
+         * Exercise the high address bits and the same negative safety gates. */
+        static const int cases4080[]={0,1,2,4,7,8,10};
+        for (unsigned j=0;j<ARRAY_SIZE(cases4080);j++) {
+        ad102_setup(&w);dev.device=GU_AD103_RTX_4080;regs[0]=0x193000a1;
+        fake.ad_mode=cases4080[j];load_rom(argv[1]);
+        regs[0x1183a4/4]=0x8000;regs[0x625f04/4]=1;regs[0x1fa7c8/4]=0x45cb8f;
+        regs[0x1fa82c/4]=0xfffffff0;regs[0x1fa830/4]=0;
+        regs[(GU_FUSE_SEC2_UCODE1+2*4)/4]=1;
+        fake.fwsec_wpr=1;
+        fake.fwsec_wpr_lo=(u32)((0x7ffe00000ull>>12)<<4);
+        fake.fwsec_wpr_hi=(u32)((0x7ffee0000ull>>12)<<4);
+        struct gpu_unlock_610_shared shared4080={0};last_work=NULL;
+        assert(!gpu_unlock_610_load_shared(&dev,&shared4080));
+        int ret4080=gpu_unlock_610_unlock(&dev,&shared4080);
+        gpu_unlock_610_release_shared(&shared4080);
+        assert((!ret4080)==(cases4080[j]==0) && fake.starts==1 && fake.gsp_starts==1);
+        if(cases4080[j]==0)assert(fake.flrs==1);
+        if(cases4080[j]==1 || cases4080[j]==2 || cases4080[j]==4 || cases4080[j]==10)
+            assert(!fake.selector_writes && !fake.ss1_writes && !fake.flrs);
+        if(fake.pins) {
+            assert(fake.live && !fake.frees && last_work->retained);
+            last_work->firmware_started=false;
+            assert(!unlock_transaction_unwind(last_work));
+            pci_dev_put(last_work->pdev);free(last_work);
+        }
+        assert(!fake.live && !fake.fw_live && dev.refs==1);
+        printf("AD103 0x2704 synthetic 32GiB mode=%d result=%d PASS\n",cases4080[j],ret4080);
+        }
+        }
+        {
         /* Dispatch the same published AD102-family payload through the exact
          * 0x2805 profile under mocked registers. This is not silicon proof. */
         ad102_setup(&w);dev.device=GU_AD106_RTX_4060_TI_16GB;load_rom(argv[1]);
