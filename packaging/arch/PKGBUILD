@@ -47,7 +47,7 @@ package_gpu-unlock-dkms() {
   replaces=('gpu-unlock-mkinitcpio')
   install=gpu-unlock.install
   cd $pkgbase
-  make DESTDIR="$pkgdir" install-dkms install-mkinitcpio
+  make DESTDIR="$pkgdir" install-dkms install-mkinitcpio install-dracut
   make DESTDIR="$pkgdir" PKG=$pkgname install-licenses
 }
 
