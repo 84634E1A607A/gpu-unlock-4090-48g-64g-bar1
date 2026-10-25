@@ -17,6 +17,7 @@
 #define RTX_A2000 0x2531 /* GA106 professional: not supported */
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
+#define RTX_4070_AD103 GU_AD103_RTX_4070
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
 #define RTX_4060_MOBILE GU_AD107_RTX_4060_MOBILE
 #define RTX_4050_MOBILE GU_AD107_RTX_4050_MOBILE
@@ -361,6 +362,31 @@ int main(void)
 	run();
 	assert(!fake.started && logged("unlock failed (-16)"));
 	puts("ad104: experimental flag, single-BDF and bound-driver guards PASS");
+
+	/* The AD103 RTX 4070 (0x2709) shares the 2705 flag and exact-BDF gate. */
+	reset("0000:01:00.0");
+	add("0000:01:00.0", RTX_4070_AD103, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("no supported card at \"0000:01:00.0\""));
+	reset("all");
+	ad103_experimental = true;
+	add("0000:01:00.0", RTX_4070_AD103, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD103 requires a single exact PCI target"));
+	reset("0000:01:00.0");
+	ad106_experimental = true;
+	add("0000:01:00.0", RTX_4070_AD103, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("0000:01:00.0");
+	ad103_experimental = true;
+	add("0000:01:00.0", RTX_4070_AD103, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	puts("ad103 0x2709: gated exact-card dispatch PASS");
 
 	/* The AD106 target needs its own flag and exactly one BDF. */
 	reset("0000:01:00.0");

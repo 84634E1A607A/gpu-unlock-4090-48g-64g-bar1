@@ -12,6 +12,7 @@ on native Linux ([2786 report](docs/ada-2786-report.md)).
 RTX 4070 Ti `10de:2782` is experimental and has been unlocked on **one** card
 ([2782 report](docs/ada-2782-report.md)).
 The AD102 RTX 4070 Ti SUPER `10de:2689` is experimental and has been unlocked on one card.
+The RTX 4070 built on AD103 (`10de:2709`) shares the 2705 path and has been unlocked on **one** card ([2709 report](docs/ada-2709-report.md)).
 Other Ada IDs remain disabled except for the listed experiments.
 The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
@@ -37,6 +38,7 @@ RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
 `10de:2786` for the experimental RTX 4070 non-Ti path,
 `10de:2782` for the experimental RTX 4070 Ti path,
 `10de:2689` for the experimental AD102 RTX 4070 Ti SUPER path,
+`10de:2709` for the experimental AD103 RTX 4070 path,
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -73,7 +75,7 @@ python3 tools/print_boot_option.py
 Choose **one** printed line for the first cold test. The examples below show
 the format if you prefer to enter it manually.
 
-For an RTX 4070 Ti SUPER `10de:2705`, append these **two** options to your
+For an RTX 4070 Ti SUPER `10de:2705` or an AD103 RTX 4070 `10de:2709`, append these **two** options to your
 kernel command line, replacing the sample address with yours:
 
 ```text
