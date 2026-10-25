@@ -20,7 +20,7 @@ module_param(ad106_experimental, bool, 0444);
 MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
 static bool ad107_experimental;
 module_param(ad107_experimental, bool, 0444);
-MODULE_PARM_DESC(ad107_experimental, "permit only the exact 10de:2882 AD107 target with a single explicit PCI address; untested on silicon");
+MODULE_PARM_DESC(ad107_experimental, "permit only the exact 10de:2882 AD107 canary with a single explicit PCI address");
 
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);

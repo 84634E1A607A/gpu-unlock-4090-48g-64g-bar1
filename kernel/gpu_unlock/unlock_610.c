@@ -348,8 +348,7 @@ static bool inaccessible(u32 value)
 static bool is_ad102(const struct unlock_transaction_work *work)
 {
 	/* AD103, AD106 and AD107 use the same pinned AD102-family Booter archive.
-	 * 0x2705 and 0x2805 each have one exact-card canary; 0x2882 is untested
-	 * on silicon. */
+	 * 0x2705, 0x2805 and 0x2882 each have one exact-card canary. */
 	return work->pdev->device == GU_AD102_RTX_4090 ||
 	       work->pdev->device == GU_AD102_RTX_4090_D ||
 	       work->pdev->device == GU_AD103_RTX_4070_TI_SUPER ||
