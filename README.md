@@ -80,6 +80,15 @@ two cold boots and later warm reboots confirmed driver 580.178.04 handoff and
 full-rate readbacks; matched throughput was measured across stock and unlocked
 boots. Other boards remain unverified.
 
+The RTX 4070 built on AD103 (`10de:2709`, 46 SMs) uses the same
+`gpu_unlock.ad103_experimental=1` opt-in and single-exact-address rule as the
+2705. One card passed every gate on its first attempt, a warm reboot with entry
+WPR2 high `0x0`, before NVIDIA 595.99.02. Matched instruction rates doubled
+(FP16/FP32 66.3 → 132.2 TF/s, BF16/FP32 66.3 → 132.0 TF/s, TF32 33.1 → 65.8
+TF/s) and cuBLAS FP16/BF16 GEMM medians rose 43–50%; numerical checks passed
+in both states. The AD104 RTX 4070 (`10de:2786`) is a different chip and is not
+admitted. See the [2709 report](docs/ada-2709-report.md).
+
 RTX 4060 Ti 16GB `10de:2805` is an **experimental AD106 target validated on one
 card**. It uses the same AD102-family payload and requires both
 `gpu_unlock.ad106_experimental=1` and a single exact PCI address; `targets=all`
@@ -153,8 +162,8 @@ gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. RTX 4070 Ti SUPER `10de:2705` and RTX 4060 Ti 16GB `10de:2805` each
-require their own experimental flag and a single exact PCI address; `all` never
+addresses. RTX 4070 Ti SUPER `10de:2705`, AD103 RTX 4070 `10de:2709` and RTX 4060 Ti
+16GB `10de:2805` each require their experimental flag and a single exact PCI address; `all` never
 selects them. Invalid entries
 are logged and ignored.
 

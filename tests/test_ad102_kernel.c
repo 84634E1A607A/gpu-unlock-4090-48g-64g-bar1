@@ -173,6 +173,21 @@ int main(int argc, char **argv)
         assert(!fake.live && !fake.fw_live && dev.refs==1);
         puts("AD106 0x2805 profile dispatch under mocked registers PASS");
         }
+        {
+        /* Same mocked dispatch for the AD103 RTX 4070 (0x2709). */
+        ad102_setup(&w);dev.device=GU_AD103_RTX_4070;load_rom(argv[1]);
+        regs[0x1183a4/4]=0x5ff4;regs[0x625f04/4]=1;regs[0x1fa7c8/4]=0x45cb8f;
+        regs[0x1fa82c/4]=0x100000;regs[0x1fa830/4]=0x5cf3ff0;
+        regs[(GU_FUSE_SEC2_UCODE1+2*4)/4]=1;
+        fake.fwsec_wpr=1;fake.fwsec_wpr_lo=0x5ff2000;fake.fwsec_wpr_hi=0x5ff2e00;
+        struct gpu_unlock_610_shared shared2709={0};last_work=NULL;
+        assert(!gpu_unlock_610_load_shared(&dev,&shared2709));
+        ret=gpu_unlock_610_unlock(&dev,&shared2709);
+        gpu_unlock_610_release_shared(&shared2709);
+        assert(!ret && fake.starts==1 && fake.gsp_starts==1 && fake.flrs==1);
+        assert(!fake.live && !fake.fw_live && dev.refs==1);
+        puts("AD103 0x2709 profile dispatch under mocked registers PASS");
+        }
     }
     puts("AD102 marker, permission, HALT, readout, metadata and retention gates passed under mocked hardware");
 }

@@ -4,7 +4,9 @@ This guide is for a Linux machine you control. The RTX 4070 Ti SUPER path is
 experimental and has been tested on **one** `10de:2705` card. RTX 4090
 `10de:2684` has a separate [single-card report](rtx4090-register-report.md).
 RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
-card ([2805 report](docs/ada-2805-report.md)). Other Ada IDs are not enabled. The measured instruction-rate gain is for
+card ([2805 report](docs/ada-2805-report.md)). The RTX 4070 built on AD103
+(`10de:2709`) shares the 2705 path and has been unlocked on **one** card
+([2709 report](docs/ada-2709-report.md)). Other Ada IDs are not enabled. The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
 INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
 effectively unchanged (59.326 → 59.495 TF/s).
@@ -17,7 +19,8 @@ lspci -Dnn | grep -i nvidia
 
 Find the line for your GPU. The full address is the first field, such as
 `0000:01:00.0`. Confirm the device ID is `10de:2705` for the experimental
-RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path
+RTX 4070 Ti SUPER path, `10de:2709` for the experimental AD103 RTX 4070 path,
+`10de:2805` for the experimental RTX 4060 Ti 16GB path
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -54,7 +57,7 @@ python3 tools/print_boot_option.py
 Choose **one** printed line for the first cold test. The examples below show
 the format if you prefer to enter it manually.
 
-For an RTX 4070 Ti SUPER `10de:2705`, append these **two** options to your
+For an RTX 4070 Ti SUPER `10de:2705` or an AD103 RTX 4070 `10de:2709`, append these **two** options to your
 kernel command line, replacing the sample address with yours:
 
 ```text
