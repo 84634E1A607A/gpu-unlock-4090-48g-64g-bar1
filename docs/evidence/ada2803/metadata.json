@@ -1,0 +1,110 @@
+{
+  "started_utc": "2026-10-25T10:32:50.068647+00:00",
+  "state": "stock",
+  "kernel": "7.2.11-arch1-1",
+  "iterations": 20000,
+  "repetitions": 5,
+  "gpu_unlock_kernel_options": [],
+  "instruction_statistic": "best of five repetitions; all repetitions retained",
+  "clock_and_power_settings_changed": false,
+  "stages": [
+    {
+      "name": "seeded numerical validation",
+      "command": [
+        "bin/validate_gemm"
+      ],
+      "started_utc": "2026-10-25T10:32:50.166204+00:00",
+      "finished_utc": "2026-10-25T10:32:50.924748+00:00",
+      "returncode": 0
+    },
+    {
+      "name": "instruction throughput",
+      "command": [
+        "bin/mma_bench",
+        "20000",
+        "5"
+      ],
+      "started_utc": "2026-10-25T10:32:50.924962+00:00",
+      "finished_utc": "2026-10-25T10:32:58.233161+00:00",
+      "returncode": 0
+    }
+  ],
+  "telemetry_command": [
+    "nvidia-smi",
+    "-i",
+    "GPU-UUID-OMITTED",
+    "--query-gpu=timestamp,clocks.sm,clocks.mem,temperature.gpu,power.draw,power.limit,utilization.gpu,memory.used,pstate",
+    "--format=csv,nounits",
+    "-lms",
+    "100"
+  ],
+  "finished_utc": "2026-10-25T10:32:58.264699+00:00",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti 16GB",
+  "device_id": "10de:2803",
+  "SMs": 34,
+  "compute_capability": "8.9",
+  "driver": "615.78.08",
+  "CUDA_toolkit": "13.4.92",
+  "power_limit_W": 165,
+  "source_commit": "4e7fefcc4923f9e083d5324dc75a7d2f906af77f",
+  "benchmark_sources_match_source_commit": true,
+  "working_tree": "Other project files had local modifications; all four benchmark source files match source_commit.",
+  "background": "Preflight reported 0% GPU utilization and 42 MiB of GPU memory in use; display processes were present.",
+  "measurement_count": 1,
+  "telemetry_time_zone": "Asia/Singapore, UTC+08:00; nvidia-smi local timestamps are retained. Stage timestamps are UTC.",
+  "sanitization": "GPU UUID replaced with GPU-UUID-OMITTED, actual PCI address replaced with <target>, and build paths normalized to bin/. Numeric results and telemetry are unchanged.",
+  "benchmark_hashes": {
+    "diagnostics/bench/mma_bench.cu": "49d4f1aa04b48c958766ce2c3764e3dbda8b9dfe5ae72a42d93efe480f639c5d",
+    "diagnostics/bench/bench_args.h": "bd548217d69e262df0dc682b142bbda7f32fb6061fcdbe448fa3882ddfb13400",
+    "diagnostics/bench/validate_gemm.cu": "06071e4ae031aaf8b87a0abbd570211b226b68dadb723007e4fe2bdffa853992",
+    "diagnostics/bench/gemm_inputs.h": "c6005990cbc8ebc584e46ceca6b04a86213bd8399bb59bad3881a9c3b86a436d",
+    "bin/mma_bench": "2d4ada998ce3212680a83ceba0c477959206a22d80edaf6855ac7c016bea511b",
+    "bin/validate_gemm": "9a012d3ddf2c83fd75deadd1e3860e22f5875402b37d213b02e46e9277e1378c"
+  },
+  "build_commands": [
+    [
+      "nvcc",
+      "-O3",
+      "-arch=sm_89",
+      "-std=c++17",
+      "-o",
+      "bin/mma_bench",
+      "diagnostics/bench/mma_bench.cu"
+    ],
+    [
+      "nvcc",
+      "-O3",
+      "-arch=sm_89",
+      "-std=c++17",
+      "-o",
+      "bin/validate_gemm",
+      "diagnostics/bench/validate_gemm.cu",
+      "-lcublas"
+    ]
+  ],
+  "error_check": {
+    "command": [
+      "journalctl",
+      "-k",
+      "-b",
+      "--no-pager",
+      "-q",
+      "--grep=NVRM: Xid|fallen off",
+      "-o",
+      "cat"
+    ],
+    "scope": "Current boot, queried after the suite.",
+    "matching_lines": 0,
+    "stderr": "",
+    "returncode": null,
+    "note": "The collection retained stdout and stderr but did not record the journal command exit status."
+  },
+  "limits": [
+    "One stock measurement on one 10de:2803 card, with five internal timing repetitions per instruction mode.",
+    "No unlock transaction or same-card unlocked performance measurement was made in this session.",
+    "Instruction issue rates do not establish application GEMM, inference or training speedup.",
+    "Six seeded numerical cases check the exercised FP16/BF16 cuBLAS paths, not arbitrary numerical accuracy.",
+    "The short telemetry capture does not establish maximum board power or long-term thermal or stability behavior.",
+    "The separate 10de:2805 evidence concerns a different card and is not a matched comparison for this baseline."
+  ]
+}

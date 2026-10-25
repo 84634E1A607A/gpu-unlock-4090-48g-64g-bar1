@@ -1,0 +1,107 @@
+{
+  "state": "stock",
+  "gpu": "NVIDIA GeForce RTX 4060 Ti 16GB",
+  "pci_device_id": "10de:2803",
+  "driver": "615.78.08",
+  "cuda_toolkit": "13.4.92",
+  "power_cap_w": 165,
+  "iterations": 20000,
+  "repetitions": 5,
+  "statistic": "best",
+  "results": [
+    {
+      "mode": "f16/f16",
+      "best": 93.1,
+      "unit": "TFLOP/s",
+      "all_runs": [
+        88.7,
+        93.1,
+        92.7,
+        92.7,
+        92.7
+      ]
+    },
+    {
+      "mode": "f16/f32",
+      "best": 46.4,
+      "unit": "TFLOP/s",
+      "all_runs": [
+        46.4,
+        46.4,
+        46.4,
+        46.4,
+        46.4
+      ]
+    },
+    {
+      "mode": "bf16/f32",
+      "best": 46.4,
+      "unit": "TFLOP/s",
+      "all_runs": [
+        46.3,
+        46.3,
+        46.3,
+        46.3,
+        46.4
+      ]
+    },
+    {
+      "mode": "s8/s32",
+      "best": 185.4,
+      "unit": "TOP/s",
+      "all_runs": [
+        185.4,
+        185.4,
+        185.4,
+        185.4,
+        185.4
+      ]
+    },
+    {
+      "mode": "dp4a",
+      "best": 46.2,
+      "unit": "TOP/s",
+      "all_runs": [
+        46.2,
+        46.0,
+        45.9,
+        45.9,
+        45.9
+      ]
+    },
+    {
+      "mode": "ffma",
+      "best": 22.2,
+      "unit": "TFLOP/s",
+      "all_runs": [
+        22.2,
+        22.2,
+        22.1,
+        22.2,
+        22.1
+      ]
+    }
+  ],
+  "seeded_numerical_cases_passed": 6,
+  "seeded_numerical_mismatches": 0,
+  "sm_rates_unchanged": true,
+  "telemetry": {
+    "sample_interval_ms": 100,
+    "total_samples": 80,
+    "active_samples_utilization_ge_50_percent": 68,
+    "sm_clock_mhz": {
+      "min": 2730.0,
+      "max": 2760.0
+    },
+    "temperature_c": {
+      "min": 48.0,
+      "max": 66.0
+    },
+    "power_w": {
+      "min": 31.02,
+      "max": 74.42
+    }
+  },
+  "kernel_gpu_errors": [],
+  "kernel_gpu_errors_stderr": ""
+}

@@ -1,0 +1,2 @@
+name, uuid, pci.bus_id, driver_version, power.limit [W], utilization.gpu [%], memory.used [MiB], memory.total [MiB]
+NVIDIA GeForce RTX 4060 Ti, GPU-UUID-OMITTED, <target>, 615.78.08, 165.00 W, 100 %, 42 MiB, 16380 MiB
