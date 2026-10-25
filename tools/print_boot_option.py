@@ -9,19 +9,19 @@ import sys
 TARGETS = {
     "2684": ("RTX 4090", None),
     "2685": ("RTX 4090 D (experimental)", "rtx4090d_experimental"),
+    "2689": ("RTX 4070 Ti SUPER AD102 (experimental)", "rtx4070tis_ad102_experimental"),
     "2704": ("RTX 4080 (experimental)", "rtx4080_experimental"),
     "2705": ("RTX 4070 Ti SUPER (experimental)", "ad103_experimental"),
+    "2709": ("RTX 4070 AD103 (experimental)", "ad103_experimental"),
+    "2757": ("RTX 4090 Laptop GPU (experimental)", "ad103m_experimental"),
+    "2782": ("RTX 4070 Ti (experimental)", "ad104_experimental"),
+    "2783": ("RTX 4070 SUPER (experimental)", "ad104_experimental"),
+    "2786": ("RTX 4070 (experimental)", "ad103_experimental"),
+    "2803": ("RTX 4060 Ti (experimental)", "ad106_experimental"),
     "2805": ("RTX 4060 Ti 16GB (experimental)", "ad106_experimental"),
+    "28a0": ("RTX 4060 Laptop GPU (experimental)", "ad107_experimental"),
     "28e0": ("RTX 4060 Mobile (experimental)", "ad107_experimental"),
     "28e1": ("RTX 4050 Mobile (experimental)", "ad107_experimental"),
-    "2786": ("RTX 4070 (experimental)", "ad103_experimental"),
-    "2782": ("RTX 4070 Ti (experimental)", "ad104_experimental"),
-    "2689": ("RTX 4070 Ti SUPER AD102 (experimental)", "rtx4070tis_ad102_experimental"),
-    "2709": ("RTX 4070 AD103 (experimental)", "ad103_experimental"),
-    "28a0": ("RTX 4060 Laptop GPU (experimental)", "ad107_experimental"),
-    "2803": ("RTX 4060 Ti (experimental)", "ad106_experimental"),
-    "2783": ("RTX 4070 SUPER (experimental)", "ad104_experimental"),
-    "2757": ("RTX 4090 Laptop GPU (experimental)", "ad103m_experimental"),
 }
 
 

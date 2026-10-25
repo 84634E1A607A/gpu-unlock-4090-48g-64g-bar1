@@ -10,31 +10,31 @@
 
 static char *targets;
 module_param(targets, charp, 0444);
-MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103, AD106 and AD107 require an exact single address");
+MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported cards; most experimental Ada IDs require a single exact address");
 
 static bool rtx4080_experimental;
 module_param(rtx4080_experimental, bool, 0444);
-MODULE_PARM_DESC(rtx4080_experimental, "permit only experimental RTX 4080 10de:2704 with one exact PCI target");
+MODULE_PARM_DESC(rtx4080_experimental, "permit the experimental RTX 4080 10de:2704 with a single exact PCI address");
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
+MODULE_PARM_DESC(ad103_experimental, "permit experimental 10de:2705 and 10de:2709 (AD103) and 10de:2786 (AD104) targets with a single exact PCI address");
 static bool ad104_experimental;
 module_param(ad104_experimental, bool, 0444);
-MODULE_PARM_DESC(ad104_experimental, "permit only the exact 10de:2782 AD104 target with a single explicit PCI address");
+MODULE_PARM_DESC(ad104_experimental, "permit experimental 10de:2782 and 10de:2783 AD104 targets with a single exact PCI address");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
-MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
+MODULE_PARM_DESC(ad106_experimental, "permit experimental 10de:2803 and 10de:2805 AD106 targets with a single exact PCI address");
 static bool ad107_experimental;
 module_param(ad107_experimental, bool, 0444);
-MODULE_PARM_DESC(ad107_experimental, "permit the exact 10de:28e1 (RTX 4050) or 10de:28e0 (RTX 4060) AD107 targets with a single explicit PCI address");
+MODULE_PARM_DESC(ad107_experimental, "permit experimental 10de:28a0, 10de:28e0 and 10de:28e1 AD107 targets with a single exact PCI address");
 
 static bool rtx4070tis_ad102_experimental;
 module_param(rtx4070tis_ad102_experimental, bool, 0444);
-MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit only the exact 10de:2689 AD102 RTX 4070 Ti SUPER with a single explicit PCI address");
+MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit the experimental AD102 RTX 4070 Ti SUPER 10de:2689 with a single exact PCI address");
 static bool ad103m_experimental;
 module_param(ad103m_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103m_experimental, "permit only the exact 10de:2757 AD103M mobile variant with a single explicit PCI address; experimental canary");
+MODULE_PARM_DESC(ad103m_experimental, "permit the experimental AD103M RTX 4090 Laptop GPU 10de:2757 with a single exact PCI address");
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
@@ -72,19 +72,19 @@ static const struct experimental_id {
 	const char *name;
 } experimental_ids[] = {
 	{ GU_AD102_RTX_4090_D, &rtx4090d_experimental, false, "RTX 4090 D" },
-	{ GU_AD103_RTX_4070_TI_SUPER, &ad103_experimental, true, "AD103" },
-	{ GU_AD103_RTX_4080, &rtx4080_experimental, true, "RTX 4080" },
-	{ GU_AD106_RTX_4060_TI_16GB, &ad106_experimental, true, "AD106" },
-	{ GU_AD107_RTX_4050_MOBILE, &ad107_experimental, true, "AD107" },
-	{ GU_AD107_RTX_4060_MOBILE, &ad107_experimental, true, "AD107" },
-	{ GU_AD104_RTX_4070, &ad103_experimental, true, "AD104" },
-	{ GU_AD104_RTX_4070_TI, &ad104_experimental, true, "AD104" },
 	{ GU_AD102_RTX_4070_TI_SUPER, &rtx4070tis_ad102_experimental, true, "AD102 RTX 4070 Ti SUPER" },
+	{ GU_AD103_RTX_4080, &rtx4080_experimental, true, "RTX 4080" },
+	{ GU_AD103_RTX_4070_TI_SUPER, &ad103_experimental, true, "AD103" },
 	{ GU_AD103_RTX_4070, &ad103_experimental, true, "AD103" },
-	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
-	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
-	{ GU_AD104_RTX_4070_SUPER, &ad104_experimental, true, "AD104" },
 	{ GU_AD103M_RTX_4090_MOBILE, &ad103m_experimental, true, "AD103M mobile" },
+	{ GU_AD104_RTX_4070_TI, &ad104_experimental, true, "AD104" },
+	{ GU_AD104_RTX_4070_SUPER, &ad104_experimental, true, "AD104" },
+	{ GU_AD104_RTX_4070, &ad103_experimental, true, "AD104" },
+	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
+	{ GU_AD106_RTX_4060_TI_16GB, &ad106_experimental, true, "AD106" },
+	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
+	{ GU_AD107_RTX_4060_MOBILE, &ad107_experimental, true, "AD107" },
+	{ GU_AD107_RTX_4050_MOBILE, &ad107_experimental, true, "AD107" },
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);
@@ -219,5 +219,5 @@ static void __exit gpu_unlock_exit(void)
 module_init(gpu_unlock_init);
 module_exit(gpu_unlock_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070 Ti SUPER and supported GA10x pre-driver tensor unlock");
+MODULE_DESCRIPTION("RTX 4090, experimental Ada and supported GA10x pre-driver tensor unlock");
 MODULE_VERSION("1.1.1");
