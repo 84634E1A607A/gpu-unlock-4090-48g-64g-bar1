@@ -23,7 +23,7 @@ static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
 
-/* RTX 4090 and supported desktop GA102/GA103/GA104/GA106 GPU functions.
+/* RTX 4090 and supported desktop GA102/GA103/GA104/GA106/GA107 GPU functions.
  * Professional parts already have full FP32-accumulate tensor issue rate.
  */
 static const unsigned short supported_ids[] = {
@@ -42,6 +42,8 @@ static const unsigned short supported_ids[] = {
 	/* GA106 (validated only on RTX 3060 12GB 0x2504) */
 	0x2501, 0x2503, 0x2504, 0x2505, 0x2507, 0x2508, 0x2509, 0x252f,
 	0x2544,
+	/* GA107 (validated only on RTX 3050 6GB 0x2584); same GA102 Booter HAL */
+	0x2584,
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);
