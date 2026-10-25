@@ -9,7 +9,8 @@ enum gpu_unlock_booter_arch {
 
 /* Exact experimental AD103 canary; other Ada PCI IDs are not admitted. */
 #define GU_AD103_RTX_4070_TI_SUPER 0x2705u
-/* Exact experimental AD106 target, untested on silicon. */
+/* Exact experimental AD106 targets, each validated on one card. */
+#define GU_AD106_RTX_4060_TI 0x2803u
 #define GU_AD106_RTX_4060_TI_16GB 0x2805u
 
 /* RTX 4090 D uses the AD102 firmware path; gated as experimental. */

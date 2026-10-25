@@ -17,7 +17,7 @@ module_param(ad103_experimental, bool, 0444);
 MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
-MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
+MODULE_PARM_DESC(ad106_experimental, "permit experimental 10de:2803/2805 AD106 targets with a single explicit PCI address");
 
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
@@ -56,7 +56,8 @@ static bool supported(const struct pci_dev *pdev)
 		return ad103_experimental;
 	if (pdev->device == GU_AD102_RTX_4090_D)
 		return rtx4090d_experimental;
-	if (pdev->device == GU_AD106_RTX_4060_TI_16GB)
+	if (pdev->device == GU_AD106_RTX_4060_TI ||
+	    pdev->device == GU_AD106_RTX_4060_TI_16GB)
 		return ad106_experimental;
 	for (i = 0; i < ARRAY_SIZE(supported_ids); i++)
 		if (pdev->device == supported_ids[i])
@@ -142,7 +143,8 @@ static int __init gpu_unlock_init(void)
 			pci_err(pdev, "gpu_unlock: experimental AD103 requires a single exact PCI target\n");
 			continue;
 		}
-		if (pdev->device == GU_AD106_RTX_4060_TI_16GB &&
+		if ((pdev->device == GU_AD106_RTX_4060_TI ||
+		     pdev->device == GU_AD106_RTX_4060_TI_16GB) &&
 		    (all || strcasecmp(targets, pci_name(pdev)))) {
 			pci_err(pdev, "gpu_unlock: experimental AD106 requires a single exact PCI target\n");
 			continue;
@@ -172,5 +174,5 @@ static void __exit gpu_unlock_exit(void)
 module_init(gpu_unlock_init);
 module_exit(gpu_unlock_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070 Ti SUPER and supported GA10x pre-driver tensor unlock");
+MODULE_DESCRIPTION("RTX 4090, experimental RTX 4070 Ti SUPER/RTX 4060 Ti and supported GA10x pre-driver tensor unlock");
 MODULE_VERSION("1.1.1");
