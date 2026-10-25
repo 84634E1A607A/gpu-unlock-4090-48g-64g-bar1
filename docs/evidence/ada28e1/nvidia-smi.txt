@@ -23,8 +23,8 @@ Sun Oct 25 03:30:03 2026
 |    0   N/A  N/A            1804      G   /usr/bin/easyeffects                      2MiB |
 |    0   N/A  N/A            1822    C+G   /usr/bin/sunshine                        85MiB |
 |    0   N/A  N/A            2177      G   alacritty                                28MiB |
-|    0   N/A  N/A            2345      G   ...rack-uuid=3190708988185955192        131MiB |
-|    0   N/A  N/A            3708      G   ...708988185955192 --log-level=3        125MiB |
-|    0   N/A  N/A            6576      G   ...rack-uuid=3190708988185955192        128MiB |
+|    0   N/A  N/A            2345      G   /usr/lib/electron/app                   131MiB |
+|    0   N/A  N/A            3708      G   /usr/lib/electron/app                   125MiB |
+|    0   N/A  N/A            6576      G   /usr/lib/electron/app                   128MiB |
 |    0   N/A  N/A           20971      G   alacritty                                20MiB |
 +-----------------------------------------------------------------------------------------+

@@ -126,6 +126,81 @@ A real-world voice conversion pipeline (Applio / RVC v2) was deployed directly o
 - **Small Audio Buffers ($M \le 13$ frames, $\le 256$ ms chunk):** Execution is hard memory-bandwidth bound across the 96-bit GDDR6 bus (192 GB/s) and 24 MB L2 cache evictions (arithmetic intensity $< 20\text{ FLOPs/byte}$). Unlocking tensor issue rate yields **1.00× speedup** as execution time is entirely dominated by streaming ~335 MB of weights across DRAM.
 - **Large Audio Batches ($M \ge 256$ frames):** As arithmetic intensity exceeds $1,000\text{ FLOPs/byte}$, the workload enters the compute-bound regime of the Roofline model, where the unlocked `fmla32` rate delivers an immediate **2.18× physical speedup** (947.3 $\mu$s FP32 vs 434.8 $\mu$s unlocked TF32).
 
+## How to unlock on an RTX 4050 laptop (Step-by-step guide)
+
+This walkthrough documents the exact, verified procedure used to unlock the RTX 4050 Mobile (`10de:28e1`) on the ASUS TUF Gaming A16 (FA607NUG). Owners of other AD107 laptops can use this as a reference:
+
+### 1. Prerequisites
+- **Distribution:** Arch Linux, CachyOS, Fedora, or Ubuntu with Linux kernel 6.x or 7.x.
+- **NVIDIA Driver:** Stock NVIDIA open kernel module (`nvidia-open`, version 560+ or 615+).
+- **Bootloader:** Limine, GRUB, or systemd-boot.
+
+### 2. Switch MUX to Discrete GPU (dGPU Only Mode)
+Before applying the patch, configure your laptop's display routing:
+1. Boot into BIOS setup (press <kbd>F2</kbd> or <kbd>Del</kbd> at startup) or use `supergfxctl` / ASUS Armoury Crate / G-Helper in Windows.
+2. Set GPU mode to **"Ultimate"** or **"Discrete GPU Only" (dGPU)**.
+3. *Why this matters:* In hybrid / Optimus mode, the dGPU may be placed into D3cold power-saving state during early initramfs boot, gating its BAR0 VBIOS ROM aperture. Switching to dGPU mode ensures the RTX 4050 is active on the PCIe bus from the first stage of boot.
+
+### 3. Build & Install the Kernel Module
+Clone the repository and build the native packages or DKMS module:
+
+```bash
+git clone https://github.com/Windroid234/gpu-unlock-ada.git
+cd gpu-unlock-ada
+
+# For Arch / CachyOS (native package):
+makepkg -si
+```
+
+Ensure the module is configured in early initramfs so it executes before `nvidia` or `nvidia-drm` probes:
+- For `mkinitcpio`: Add a drop-in `/etc/mkinitcpio.conf.d/zz-gpu-unlock.conf` containing `MODULES+=(gpu_unlock)`.
+- Rebuild initramfs: `sudo mkinitcpio -P` (or `dracut -f`).
+
+### 4. Configure Bootloader Parameters
+Identify your dGPU's exact PCI bus address:
+```bash
+lspci -nn | grep -i nvidia
+# Example output: 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation AD107M [GeForce RTX 4050 Max-Q / Mobile] [10de:28e1]
+```
+
+Add the target address and experimental flag to your kernel command line:
+```text
+gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
+```
+*(Recommendation: Create a dedicated safe boot entry in your bootloader so you can select stock if needed).*
+
+### 5. Mandatory Cold Boot & EC Hardware Reset
+Soft rebooting (`reboot`) does **not** discharge volatile security registers on laptops because the Embedded Controller (EC) keeps 3.3V standby rails powered. You must execute a complete EC discharge:
+1. Shut down the system completely (`poweroff`).
+2. **Unplug the AC power adapter.**
+3. **Press and hold the laptop power button for 40 continuous seconds.** (This discharges motherboard capacitors, resets the EC power rails, and unlatches the SEC2 processor).
+4. Reconnect the AC adapter and power on.
+
+### 6. Verification
+Boot into your unlocked kernel entry and verify:
+```bash
+# Check kernel log:
+sudo dmesg | grep gpu_unlock
+# Expected: "pci 0000:01:00.0: gpu_unlock: unlocked"
+
+# Query the NVIDIA ResourceManager getter:
+python3 tools/read_sm_rates.py
+# Expected: "fmla32": 0, "imla2": 0, "imla4": 0 (all 0 = full speed)
+```
+
+### 7. Troubleshooting: Restoring Full 140W TGP Ceiling (ASUS Laptops)
+If your laptop's `nvidia-powerd.service` crash-loops on early boot, ASUS ACPI dynamic boost tables can default to an emergency 55W power ceiling. To restore the full 115W base / 140W Dynamic Boost TGP:
+```bash
+sudo mkdir -p /etc/systemd/system/nvidia-powerd.service.d/
+sudo tee /etc/systemd/system/nvidia-powerd.service.d/override.conf << 'EOF'
+[Unit]
+ConditionPathExists=/dev/null
+EOF
+sudo systemctl daemon-reload
+sudo systemctl stop nvidia-powerd
+```
+Verify with `nvidia-smi -q -d POWER` that `Power Limit` reflects 115W/140W.
+
 ## Not yet done
 
 - warm-reboot persistence checks across ordinary soft reboots;

@@ -1,5 +1,5 @@
-[    0.000000] Command line: quiet nowatchdog splash rw rootflags=subvol=/@ root=UUID=cfe28423-f8b7-4961-b296-1775abf94b8c gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
-[    0.025745] Kernel command line: quiet nowatchdog splash rw rootflags=subvol=/@ root=UUID=cfe28423-f8b7-4961-b296-1775abf94b8c gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
+[    0.000000] Command line: quiet nowatchdog splash rw rootflags=subvol=/@ root=UUID=ROOT-UUID-OMITTED gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
+[    0.025745] Kernel command line: quiet nowatchdog splash rw rootflags=subvol=/@ root=UUID=ROOT-UUID-OMITTED gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
 [    0.475671] pci 0000:01:00.0: vgaarb: setting as boot VGA device
 [    0.475673] pci 0000:01:00.0: vgaarb: bridge control possible
 [    0.475675] pci 0000:01:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
