@@ -18,6 +18,7 @@
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
+#define RTX_4070TIS_AD102 GU_AD102_RTX_4070_TI_SUPER
 
 static struct pci_dev devices[MAX_DEVICES];
 static unsigned int device_count;
@@ -204,6 +205,7 @@ static void reset(char *list)
 	targets = list;
 	ad103_experimental = false;
 	ad106_experimental = false;
+	rtx4070tis_ad102_experimental = false;
 }
 
 /* Runs init, then checks what holds for every case. */
@@ -354,6 +356,38 @@ int main(void)
 	run();
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad106: gated exact-card dispatch PASS");
+
+	/* The AD102 RTX 4070 Ti SUPER needs its own flag and exactly one BDF. */
+	reset("0000:01:00.0");
+	add("0000:01:00.0", RTX_4070TIS_AD102, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("no supported card at \"0000:01:00.0\""));
+	reset("0000:01:00.0");
+	ad103_experimental = true;
+	add("0000:01:00.0", RTX_4070TIS_AD102, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("all");
+	rtx4070tis_ad102_experimental = true;
+	add("0000:01:00.0", RTX_4070TIS_AD102, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD102 RTX 4070 Ti SUPER requires a single exact PCI target"));
+	reset("0000:01:00.0,0000:02:00.0");
+	rtx4070tis_ad102_experimental = true;
+	add("0000:01:00.0", RTX_4070TIS_AD102, false);
+	add("0000:02:00.0", RTX_3090, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(!fake.unlocks[0] && fake.unlocks[1]);
+	reset("0000:01:00.0");
+	rtx4070tis_ad102_experimental = true;
+	add("0000:01:00.0", RTX_4070TIS_AD102, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	puts("ad102 4070 Ti SUPER: gated exact-card dispatch PASS");
 
 	/* No opt-in on the command line: the module does nothing. */
 	for (int empty = 0; empty < 2; empty++) {

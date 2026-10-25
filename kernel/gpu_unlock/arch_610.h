@@ -15,4 +15,8 @@ enum gpu_unlock_booter_arch {
 /* RTX 4090 D uses the AD102 firmware path; gated as experimental. */
 #define GU_AD102_RTX_4090_D 0x2685u
 
+/* RTX 4070 Ti SUPER on a cut-down AD102 die (not the AD103 0x2705). Exact
+ * experimental target, untested on silicon. */
+#define GU_AD102_RTX_4070_TI_SUPER 0x2689u
+
 #endif

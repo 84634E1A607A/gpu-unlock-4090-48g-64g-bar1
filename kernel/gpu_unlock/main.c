@@ -10,7 +10,7 @@
 
 static char *targets;
 module_param(targets, charp, 0444);
-MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103 and AD106 require an exact single address");
+MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported RTX 4090/GA10x cards; AD103, AD106 and the AD102 RTX 4070 Ti SUPER require an exact single address");
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
@@ -22,6 +22,10 @@ MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 targ
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
+
+static bool rtx4070tis_ad102_experimental;
+module_param(rtx4070tis_ad102_experimental, bool, 0444);
+MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit only the exact 10de:2689 AD102 RTX 4070 Ti SUPER with a single explicit PCI address; untested on silicon");
 
 /* RTX 4090 and supported desktop GA102/GA103/GA104/GA106 GPU functions.
  * Professional parts already have full FP32-accumulate tensor issue rate.
@@ -58,6 +62,8 @@ static bool supported(const struct pci_dev *pdev)
 		return rtx4090d_experimental;
 	if (pdev->device == GU_AD106_RTX_4060_TI_16GB)
 		return ad106_experimental;
+	if (pdev->device == GU_AD102_RTX_4070_TI_SUPER)
+		return rtx4070tis_ad102_experimental;
 	for (i = 0; i < ARRAY_SIZE(supported_ids); i++)
 		if (pdev->device == supported_ids[i])
 			return true;
@@ -145,6 +151,11 @@ static int __init gpu_unlock_init(void)
 		if (pdev->device == GU_AD106_RTX_4060_TI_16GB &&
 		    (all || strcasecmp(targets, pci_name(pdev)))) {
 			pci_err(pdev, "gpu_unlock: experimental AD106 requires a single exact PCI target\n");
+			continue;
+		}
+		if (pdev->device == GU_AD102_RTX_4070_TI_SUPER &&
+		    (all || strcasecmp(targets, pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental AD102 RTX 4070 Ti SUPER requires a single exact PCI target\n");
 			continue;
 		}
 		if (!all && !listed(pci_name(pdev)))
