@@ -16,6 +16,7 @@ TARGETS = {
     "28e1": ("RTX 4050 Mobile (experimental)", "ad107_experimental"),
     "2786": ("RTX 4070 (experimental)", "ad103_experimental"),
     "2782": ("RTX 4070 Ti (experimental)", "ad104_experimental"),
+    "2689": ("RTX 4070 Ti SUPER AD102 (experimental)", "rtx4070tis_ad102_experimental"),
 }
 
 

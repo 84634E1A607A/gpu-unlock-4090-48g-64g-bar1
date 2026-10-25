@@ -140,6 +140,12 @@ guest, one cold boot passed every gate with the NVIDIA 595.99.02 driver. A
 matched stock/unlocked run measured FP16/BF16/TF32 FP32-accumulate instruction
 rates doubled and large cuBLAS FP16/BF16 GEMMs +93-94%. A later guest reboot
 kept the unlock. See the [2782 report](docs/ada-2782-report.md).
+
+RTX 4070 Ti SUPER `10de:2689` is the same product on a cut-down **AD102** die,
+not the AD103 `10de:2705`. It is an **experimental target, untested on silicon**.
+It routes through the AD102 path and requires both
+`gpu_unlock.rtx4070tis_ad102_experimental=1` and a single exact PCI address;
+`targets=all` never selects it.
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
@@ -201,6 +207,7 @@ gpu_unlock.targets=all
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
+gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4070tis_ad102_experimental=1
 ```
 
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.

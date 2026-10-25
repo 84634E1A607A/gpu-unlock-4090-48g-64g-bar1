@@ -11,6 +11,7 @@ RTX 4070 non-Ti `10de:2786` is experimental and validated on one Gigabyte card
 on native Linux ([2786 report](docs/ada-2786-report.md)).
 RTX 4070 Ti `10de:2782` is experimental and has been unlocked on **one** card
 ([2782 report](docs/ada-2782-report.md)).
+The AD102 RTX 4070 Ti SUPER `10de:2689` is experimental and has been unlocked on one card.
 Other Ada IDs remain disabled except for the listed experiments.
 The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
@@ -35,6 +36,7 @@ RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
 `10de:28e1` (RTX 4050 Mobile) or `10de:28e0` (RTX 4060 Mobile) for the experimental AD107 path,
 `10de:2786` for the experimental RTX 4070 non-Ti path,
 `10de:2782` for the experimental RTX 4070 Ti path,
+`10de:2689` for the experimental AD102 RTX 4070 Ti SUPER path,
 or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
@@ -105,6 +107,13 @@ For an RTX 4070 Ti `10de:2782`, use its own experimental flag:
 
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad104_experimental=1
+```
+
+For an AD102 RTX 4070 Ti SUPER `10de:2689` (untested on silicon), use its own
+experimental flag:
+
+```text
+gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4070tis_ad102_experimental=1
 ```
 
 For an RTX 4090 `10de:2684`, only the first option is needed:
