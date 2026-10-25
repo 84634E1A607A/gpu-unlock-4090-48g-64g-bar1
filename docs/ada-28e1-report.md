@@ -129,6 +129,6 @@ A real-world voice conversion pipeline (Applio / RVC v2) was deployed directly o
 ## Not yet done
 
 - warm-reboot persistence checks across ordinary soft reboots;
-- [Done] representative cuBLAS GEMM numerical validation, 100% TDP burn, and real-world RVC roofline profiling;
-- desktop AD107 boards (RTX 4060 desktop) and other mobile variants.
+- desktop AD107 boards and other mobile OEM variants.
+
 
