@@ -47,7 +47,9 @@ static bool fake_ada_id(void) {
     return dev.device==GU_AD102_RTX_4090 ||
            dev.device==GU_AD103_RTX_4080 ||
            dev.device==GU_AD103_RTX_4070_TI_SUPER ||
-           dev.device==GU_AD106_RTX_4060_TI_16GB;
+           dev.device==GU_AD106_RTX_4060_TI_16GB ||
+           dev.device==GU_AD107_RTX_4050_MOBILE ||
+           dev.device==GU_AD107_RTX_4060_MOBILE;
 }
 static u8 fw_image[4097];
 static struct firmware fw={sizeof(fw_image),fw_image};

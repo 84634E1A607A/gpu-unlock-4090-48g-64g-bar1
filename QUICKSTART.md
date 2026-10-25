@@ -4,8 +4,10 @@ This guide is for a Linux machine you control. The RTX 4070 Ti SUPER path is
 experimental and has been tested on **one** `10de:2705` card. RTX 4090
 `10de:2684` has a separate [single-card report](rtx4090-register-report.md).
 RTX 4060 Ti 16GB `10de:2805` is experimental and has been unlocked on **one**
-card ([2805 report](docs/ada-2805-report.md)). Other Ada IDs remain disabled
-except for the listed experiments.
+card ([2805 report](docs/ada-2805-report.md)). RTX 4050 Mobile `10de:28e1`
+is experimental and has been unlocked on **one** board ([28e1 report](docs/ada-28e1-report.md)).
+RTX 4060 Mobile `10de:28e0` is also an experimental AD107 target enabled under the same flag.
+Other Ada IDs remain disabled except for the listed experiments.
 The measured instruction-rate gain is for
 FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
 INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
@@ -25,8 +27,9 @@ lspci -Dnn | grep -i nvidia
 Find the line for your GPU. The full address is the first field, such as
 `0000:01:00.0`. Confirm the device ID is `10de:2705` for the experimental
 RTX 4070 Ti SUPER path, `10de:2805` for the experimental RTX 4060 Ti 16GB path,
-`10de:2704` for the experimental RTX 4080 path, or `10de:2684` for the RTX 4090
-path. Keep this address
+`10de:2704` for the experimental RTX 4080 path,
+`10de:28e1` (RTX 4050 Mobile) or `10de:28e0` (RTX 4060 Mobile) for the experimental AD107 path,
+or `10de:2684` for the RTX 4090 path. Keep this address
 for step 3. On a multi-GPU host, identify the exact intended card; do not use
 `targets=all` for an Ada test.
 
@@ -80,6 +83,12 @@ address:
 
 ```text
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.rtx4080_experimental=1
+```
+
+For an RTX 4050 Mobile `10de:28e1` or RTX 4060 Mobile `10de:28e0`, use their shared experimental flag instead:
+
+```text
+gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad107_experimental=1
 ```
 
 For an RTX 4090 `10de:2684`, only the first option is needed:

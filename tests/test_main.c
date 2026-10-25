@@ -18,6 +18,8 @@
 #define RTX_4090 0x2684 /* AD102 */
 #define RTX_4070TI_SUPER GU_AD103_RTX_4070_TI_SUPER
 #define RTX_4060TI_16GB GU_AD106_RTX_4060_TI_16GB
+#define RTX_4060_MOBILE GU_AD107_RTX_4060_MOBILE
+#define RTX_4050_MOBILE GU_AD107_RTX_4050_MOBILE
 
 static struct pci_dev devices[MAX_DEVICES];
 static unsigned int device_count;
@@ -380,6 +382,42 @@ int main(void)
     run();
     assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
     puts("RTX 4080: separate opt-in and exact PCI target PASS");
+	/* The AD107 target needs its own flag and exactly one BDF. */
+	reset("0000:01:00.0");
+	add("0000:01:00.0", RTX_4050_MOBILE, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("no supported card at \"0000:01:00.0\""));
+	reset("0000:01:00.0");
+	ad106_experimental = true;
+	add("0000:01:00.0", RTX_4050_MOBILE, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	reset("all");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4050_MOBILE, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD107 requires a single exact PCI target"));
+	reset("0000:01:00.0");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4050_MOBILE, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	reset("all");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_MOBILE, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD107 requires a single exact PCI target"));
+	reset("0000:01:00.0");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_MOBILE, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	puts("ad107: gated exact-card dispatch PASS");
 
 	/* No opt-in on the command line: the module does nothing. */
 	for (int empty = 0; empty < 2; empty++) {

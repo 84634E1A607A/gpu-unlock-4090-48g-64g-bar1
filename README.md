@@ -1,4 +1,4 @@
-# GPU unlock 1.1.1 — RTX 4090, RTX 4070 Ti SUPER, RTX 4060 Ti 16GB and experimental RTX 4080
+# GPU unlock 1.1.1 — RTX 4090 and experimental Ada GPUs
 
 New to this project? Start with the [copy-paste Quick Start](QUICKSTART.md).
 
@@ -109,6 +109,18 @@ Other cards and memory configurations, boot repeatability, and gains on other
 workloads remain unverified. See the
 [RTX 4080 hardware report](docs/rtx4080-hardware-report.md).
 
+RTX 4050 Mobile `10de:28e1` is an **experimental AD107 target validated on one
+machine (ASUS TUF Gaming A16 FA607NUG, AMD Ryzen 7 7445HS)**. It requires both
+`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. One cold boot passed every marker, permission, selector and
+post-FLR gate, the NVIDIA 615.78.08 driver loaded, and the RM getter changed
+FMLA32, IMLA2 and IMLA4 from half to full rate. Matched SM89 issue-rate
+benchmarks showed a 2.00× speedup for FP16/FP32 accumulate (26.5 → 53.0 TF/s) and
+TF32/FP32 accumulate (13.2 → 26.4 TF/s). **Warning:** Due to OEM laptop
+hardware variance in VBIOS ROM aperture exposure (BAR0 + `0x300000`), EC power rails,
+and PCIe root complex FLR handling, this may not work on other laptop models
+without prior hardware verification. See the [28e1 report](docs/ada-28e1-report.md).
+RTX 4060 Mobile `10de:28e0` is also accepted under `gpu_unlock.ad107_experimental=1` with a single exact target.
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
