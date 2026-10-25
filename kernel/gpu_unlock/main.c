@@ -19,6 +19,9 @@ MODULE_PARM_DESC(rtx4080_experimental, "permit only experimental RTX 4080 10de:2
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
 MODULE_PARM_DESC(ad103_experimental, "permit only the exact 10de:2705 AD103 canary with a single explicit PCI address");
+static bool ad104_experimental;
+module_param(ad104_experimental, bool, 0444);
+MODULE_PARM_DESC(ad104_experimental, "permit only the exact 10de:2782 AD104 target with a single explicit PCI address");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
 MODULE_PARM_DESC(ad106_experimental, "permit only the exact 10de:2805 AD106 target with a single explicit PCI address; untested on silicon");
@@ -67,6 +70,7 @@ static const struct experimental_id {
 	{ GU_AD107_RTX_4050_MOBILE, &ad107_experimental, true, "AD107" },
 	{ GU_AD107_RTX_4060_MOBILE, &ad107_experimental, true, "AD107" },
 	{ GU_AD104_RTX_4070, &ad103_experimental, true, "AD104" },
+	{ GU_AD104_RTX_4070_TI, &ad104_experimental, true, "AD104" },
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);

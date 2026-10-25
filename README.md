@@ -131,6 +131,15 @@ hardware variance in VBIOS ROM aperture exposure (BAR0 + `0x300000`), EC power r
 and PCIe root complex FLR handling, this may not work on other laptop models
 without prior hardware verification. See the [28e1 report](docs/ada-28e1-report.md).
 RTX 4060 Mobile `10de:28e0` is also accepted under `gpu_unlock.ad107_experimental=1` with a single exact target.
+
+RTX 4070 Ti `10de:2782` is an **experimental AD104 target validated on one
+card**. It uses the same AD102-family payload and requires both
+`gpu_unlock.ad104_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. On the tested ASUS card, passed through by VFIO to a KVM
+guest, one cold boot passed every gate with the NVIDIA 595.99.02 driver. A
+matched stock/unlocked run measured FP16/BF16/TF32 FP32-accumulate instruction
+rates doubled and large cuBLAS FP16/BF16 GEMMs +93-94%. A later guest reboot
+kept the unlock. See the [2782 report](docs/ada-2782-report.md).
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 

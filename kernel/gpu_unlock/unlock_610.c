@@ -70,6 +70,7 @@ static bool ad102_family(unsigned short device)
 	case GU_AD107_RTX_4050_MOBILE:
 	case GU_AD107_RTX_4060_MOBILE:
 	case GU_AD104_RTX_4070:
+	case GU_AD104_RTX_4070_TI:
 		return true;
 	default:
 		return false;
