@@ -88,6 +88,18 @@ permission, selector and post-FLR gate, the NVIDIA 595.99.02 driver loaded, and
 the RM getter changed FMLA32, IMLA2 and IMLA4 from half to full rate. No
 same-card stock throughput run has been made yet. See the
 [2805 report](docs/ada-2805-report.md).
+RTX 4060 Laptop GPU `10de:28a0` is an **experimental AD107 target validated on
+one card**. It uses the same AD102-family payload and requires both
+`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. On the tested card, one boot passed every marker, permission,
+selector and post-FLR gate, the NVIDIA `615.78.08` driver loaded, and the
+module's own effective speed-select readback changed from fields
+`0 0 2 0 0 2 0 2 0` (`full=0`) to all zero (`full=1`) within the same boot; the
+RM getter reported full rate on every field. The card also completed the
+transaction from a driver-initialized warm state, after an earlier failed
+dispatch attempt was cleanly refused with `-EBUSY`. No same-card stock
+instruction-rate run has been made yet; see the
+[28a0 report](docs/ada-28a0-report.md).
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
@@ -153,9 +165,9 @@ gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad106_experimental=1
 These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
-addresses. RTX 4070 Ti SUPER `10de:2705` and RTX 4060 Ti 16GB `10de:2805` each
-require their own experimental flag and a single exact PCI address; `all` never
-selects them. Invalid entries
+addresses. RTX 4070 Ti SUPER `10de:2705`, RTX 4060 Ti 16GB `10de:2805` and
+RTX 4060 Laptop GPU `10de:28a0` each require their own experimental flag and a
+single exact PCI address; `all` never selects them. Invalid entries
 are logged and ignored.
 
 The packages support these initramfs generators:
