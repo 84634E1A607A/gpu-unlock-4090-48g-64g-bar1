@@ -131,6 +131,33 @@
       "note": "Four consecutive matrix passes on a freshly started engine; the first pass is retained separately because a cold engine is measurably slower. Medians use passes 2-4."
     }
   },
+  "model_quantization_mix": {
+    "source": "model-quantization.json",
+    "files": [
+      "Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00001-of-00002.gguf",
+      "Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00002-of-00002.gguf"
+    ],
+    "total_GiB": 78.09,
+    "total_elements_billions": 176.9,
+    "element_fraction_by_type": {
+      "Q6_K": 0.0094,
+      "BF16": 0.0043,
+      "F32": 0.0,
+      "IQ4_XS": 0.0149,
+      "Q4_K": 0.0016,
+      "IQ4_NL": 0.4743,
+      "Q8_0": 0.0047,
+      "IQ3_XXS": 0.1612,
+      "Q5_K": 0.0025,
+      "custom": 0.0427,
+      "IQ2_S": 0.1896,
+      "F16": 0.0,
+      "IQ3_S": 0.0948
+    },
+    "high_precision_tensors": 777,
+    "high_precision_byte_fraction": 0.0183,
+    "high_precision_element_fraction": 0.0043
+  },
   "sanitization": "GPU UUID, actual PCI bus address, host name, root UUID, host paths and LAN addresses omitted. Journal timestamps stripped. Numeric outputs and timings preserved verbatim.",
   "limits": [
     "One modified 48 GB board, one cold boot, one kernel/driver combination.",

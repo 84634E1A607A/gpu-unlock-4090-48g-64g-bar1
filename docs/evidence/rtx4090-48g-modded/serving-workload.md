@@ -30,10 +30,19 @@ Decode spread (±12%) is larger than any effect, so no decode conclusion is draw
 prefill cell moves the most, which matches the confounder described under Limits: expert-cache
 residency differs between a 3-day-old engine and a freshly started one.
 
-Why this is consistent with a 2x tensor-core unlock: quantized matmuls on this model do not use
-the FP16/BF16-input, FP32-accumulate tensor path. In the same session the controls did not move:
+Why this is consistent with a 2x tensor-core unlock: the file is a *mixed* quantization, so it
+does contain higher-precision tensors -- they are simply not where the work is. Parsed from the
+GGUF header ([model-quantization.json](model-quantization.json)): 78.09 GiB over 176.9 G elements, split by element count as
+IQ4_NL 47.4%, IQ2_S 19.0%, IQ3_XXS 16.1%, IQ3_S 9.5%, one custom type 4.3%, the remainder 3.7%.
+Every F32/F16/BF16 tensor together is 1.8% of bytes and 0.43% of elements,
+and the largest of them is a 50 MiB projection: they are narrow per-layer
+bottlenecks (`hc_*` 320-wide branches, MoE router gates, per-layer embeddings), not the
+per-token GEMM. A perfect 2x on that 0.43% would move the numbers reported above by well
+under a percent, which is inside the 1-4% spread.
+The controls say the same thing:
 `dp4a` 164.0 -> 163.5 TF/s and `s8/s32` 659.4 -> 657.7 TF/s.
-Unquantized FP16/BF16 weights would be the case to test next; it was not tested here.
+A BF16 workload -- the BF16 vision projector that ships next to this model, or unquantized
+weights -- is where the unlock should still pay off; neither was measured here.
 
 ## Limits
 

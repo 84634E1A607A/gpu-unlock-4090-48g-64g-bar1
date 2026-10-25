@@ -63,7 +63,9 @@ separate runs while FP16 4096³ reached 215-216 TF/s; no explanation is claimed 
 
 ## Workload result: no gain on a quantized MoE serving stack
 
-[Full table and method](serving-workload.md). Summary: prefill at 8K and 32K is within 1–2% of stock,
+[Full table, method and the file's quantization mix](serving-workload.md). Summary: the model is a
+mixed quantization whose F32/F16/BF16 tensors are 0.43% of elements, so there is very little
+compute for the unlock to act on. Prefill at 8K and 32K is within 1–2% of stock,
 decode spread exceeds any effect, and the CPU/GPU-expert overlap that dominates this model does not
 use the unlocked tensor path. The unlock is real; this workload does not consume it.
 
