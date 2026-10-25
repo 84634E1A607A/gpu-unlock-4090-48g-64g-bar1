@@ -46,6 +46,10 @@ warm reboots, the last from a persistent EFI default. Throughput was measured
 on the first cold boot. See the [2705 canary report](docs/ada-2705-report.md)
 and its [sanitized raw benchmark output](docs/evidence/ada2705/README.md).
 
+RTX 4090 Laptop GPU (`10de:2757`, AD103M) is **experimental and unconfirmed**:
+the unlock completes and the rate getter flips, but one matched run showed no
+throughput change. See the [2757 report](docs/ada-2757-report.md).
+
 The AD102 payload and its debug-booter analysis come from
 **[TOTORONG/AD103_win_unlocker](https://huggingface.co/TOTORONG/AD103_win_unlocker)**.
 This fork integrates that published payload into
