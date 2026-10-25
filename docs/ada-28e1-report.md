@@ -194,22 +194,10 @@ python3 tools/read_sm_rates.py
 # Expected: "fmla32": 0, "imla2": 0, "imla4": 0 (all 0 = full speed)
 ```
 
-### 7. Troubleshooting: Restoring Full 140W TGP Ceiling (ASUS Laptops)
-If your laptop's `nvidia-powerd.service` crash-loops on early boot, ASUS ACPI dynamic boost tables can default to an emergency 55W power ceiling. To restore the full 115W base / 140W Dynamic Boost TGP:
-```bash
-sudo mkdir -p /etc/systemd/system/nvidia-powerd.service.d/
-sudo tee /etc/systemd/system/nvidia-powerd.service.d/override.conf << 'EOF'
-[Unit]
-ConditionPathExists=/dev/null
-EOF
-sudo systemctl daemon-reload
-sudo systemctl stop nvidia-powerd
-```
-Verify with `nvidia-smi -q -d POWER` that `Power Limit` reflects 115W/140W.
-
 ## Not yet done
 
 - warm-reboot persistence checks across ordinary soft reboots;
 - desktop AD107 boards and other mobile OEM variants.
+
 
 
