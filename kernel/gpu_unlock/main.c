@@ -78,6 +78,7 @@ static const struct experimental_id {
 	{ GU_AD103_RTX_4070, &ad103_experimental, true, "AD103" },
 	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
 	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
+	{ GU_AD104_RTX_4070_SUPER, &ad104_experimental, true, "AD104" },
 };
 
 static ASYNC_DOMAIN_EXCLUSIVE(unlock_domain);
