@@ -22,6 +22,8 @@ enum gpu_unlock_booter_arch {
 #define GU_AD107_RTX_4050_MOBILE 0x28e1u
 /* Exact experimental AD104 target. */
 #define GU_AD104_RTX_4070_TI 0x2782u
+/* Exact experimental AD107 target, untested on silicon. */
+#define GU_AD107_RTX_4060_LAPTOP 0x28a0u
 
 /* RTX 4090 D uses the AD102 firmware path; gated as experimental. */
 #define GU_AD102_RTX_4090_D 0x2685u

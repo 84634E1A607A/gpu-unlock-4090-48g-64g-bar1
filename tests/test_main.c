@@ -23,6 +23,7 @@
 #define RTX_4050_MOBILE GU_AD107_RTX_4050_MOBILE
 #define RTX_4070TI GU_AD104_RTX_4070_TI
 #define RTX_4070TIS_AD102 GU_AD102_RTX_4070_TI_SUPER
+#define RTX_4060_LAPTOP GU_AD107_RTX_4060_LAPTOP
 
 static struct pci_dev devices[MAX_DEVICES];
 static unsigned int device_count;
@@ -212,6 +213,7 @@ static void reset(char *list)
 	ad106_experimental = false;
 	ad104_experimental = false;
 	rtx4070tis_ad102_experimental = false;
+	ad107_experimental = false;
 }
 
 /* Runs init, then checks what holds for every case. */
@@ -412,6 +414,19 @@ int main(void)
 	run();
 	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
 	puts("ad106: gated exact-card dispatch PASS");
+	reset("all");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_LAPTOP, false);
+	run();
+	assert(!fake.loads && !fake.started);
+	assert(logged("experimental AD107 requires a single exact PCI target"));
+	reset("0000:01:00.0");
+	ad107_experimental = true;
+	add("0000:01:00.0", RTX_4060_LAPTOP, false);
+	fake.expected_concurrent = 1;
+	run();
+	assert(fake.loads == 1 && fake.started == 1 && fake.unlocks[0]);
+	puts("ad107: gated exact-card dispatch PASS");
 
 
     /* The local 4080 port never broadens the existing AD103 flag or all. */

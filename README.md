@@ -155,6 +155,18 @@ not the AD103 `10de:2705`. It is an **experimental target, untested on silicon**
 It routes through the AD102 path and requires both
 `gpu_unlock.rtx4070tis_ad102_experimental=1` and a single exact PCI address;
 `targets=all` never selects it.
+RTX 4060 Laptop GPU `10de:28a0` is an **experimental AD107 target validated on
+one card**. It uses the same AD102-family payload and requires both
+`gpu_unlock.ad107_experimental=1` and a single exact PCI address; `targets=all`
+never selects it. On the tested card, one boot passed every marker, permission,
+selector and post-FLR gate, the NVIDIA `615.78.08` driver loaded, and the
+module's own effective speed-select readback changed from fields
+`0 0 2 0 0 2 0 2 0` (`full=0`) to all zero (`full=1`) within the same boot; the
+RM getter reported full rate on every field. The card also completed the
+transaction from a driver-initialized warm state, after an earlier failed
+dispatch attempt was cleanly refused with `-EBUSY`. No same-card stock
+instruction-rate run has been made yet; see the
+[28a0 report](docs/ada-28a0-report.md).
 Other Ada IDs, professional RTX A-series and data-centre parts are not accepted.
 Shared firmware across Ada chips does not establish support for untested cards.
 
