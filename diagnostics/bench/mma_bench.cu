@@ -128,6 +128,10 @@ __global__ void bench_fp8(unsigned long long iters, float *sink)
 			carry += d[j][e];
 	if (carry == 1234.5678f)
 		sink[threadIdx.x] = 1.0f;
+#if __CUDA_ARCH__ < 890
+	/* Built without the instruction: mark the sink so the host skips the mode. */
+	sink[threadIdx.x] = -1.0f;
+#endif
 }
 
 __global__ void bench_dp4a(unsigned long long iters, float *sink)
@@ -214,6 +218,18 @@ static void launch_fp8(unsigned long long iters, float *sink)
 	bench_fp8<<<BLOCKS, WARPS_PER_BLOCK * 32>>>(iters, sink);
 }
 
+/* A build below sm_89 times an empty FP8 loop; its kernel marks the sink. */
+static bool fp8_built(float *sink)
+{
+	float mark = 0.0f;
+
+	cuda_check(cudaMemset(sink, 0, sizeof(float)), "clear sink");
+	launch_fp8(1, sink);
+	cuda_check(cudaDeviceSynchronize(), "fp8 build probe");
+	cuda_check(cudaMemcpy(&mark, sink, sizeof(float), cudaMemcpyDeviceToHost), "read sink");
+	return mark == 0.0f;
+}
+
 static void launch_dp4a(unsigned long long iters, float *sink)
 {
 	bench_dp4a<<<BLOCKS, WARPS_PER_BLOCK * 32>>>(iters, sink);
@@ -268,6 +284,10 @@ int main(int argc, char **argv)
 		double best = 0.0, tflops;
 		std::vector<double> runs;
 
+		if (modes[i].launch == launch_fp8 && !fp8_built(sink)) {
+			printf("%-9s %10s (build for sm_89 or newer)\n", modes[i].name, "n/a");
+			continue;
+		}
 		for (r = 0; r < reps; r++) {
 			float ms = time_ms(modes[i].launch, iters, sink);
 			if (ms <= 0.0f)
