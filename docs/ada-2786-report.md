@@ -121,6 +121,10 @@ kernel; normal presets/defaults were preserved. Only the test entry specified:
 gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1
 ```
 
+The merged module admits 2786 under `gpu_unlock.ad104_experimental=1`
+instead, alongside the other AD104 IDs; `ad103_experimental` no longer
+selects it.
+
 The systemd initramfs explicitly loaded `gpu_unlock nvidia nvidia_modeset
 nvidia_uvm nvidia_drm` in that order. An image-only drop-in for
 `systemd-udev-trigger.service` ensured coldplug did not race explicit module

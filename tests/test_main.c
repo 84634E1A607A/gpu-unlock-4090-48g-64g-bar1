@@ -352,7 +352,7 @@ int main(void)
 	for (unsigned int flag = 0; flag < 2; flag++) {
 		for (unsigned int t = 0; t < ARRAY_SIZE(ad104_targets); t++) {
 			reset(ad104_targets[t]);
-			ad103_experimental = flag;
+			ad104_experimental = flag;
 			add("0000:01:00.0", GU_AD104_RTX_4070, false);
 			bool expected = flag && t == 3;
 			fake.expected_concurrent = expected;
@@ -360,13 +360,18 @@ int main(void)
 			assert(fake.loads == expected && fake.started == expected);
 		}
 	}
+	for (unsigned int other = 0; other < 2; other++) {
+		reset("0000:01:00.0");
+		if (other)
+			ad106_experimental = true;
+		else
+			ad103_experimental = true;
+		add("0000:01:00.0", GU_AD104_RTX_4070, false);
+		run();
+		assert(!fake.loads && !fake.started);
+	}
 	reset("0000:01:00.0");
-	ad106_experimental = true;
-	add("0000:01:00.0", GU_AD104_RTX_4070, false);
-	run();
-	assert(!fake.loads && !fake.started);
-	reset("0000:01:00.0");
-	ad103_experimental = true;
+	ad104_experimental = true;
 	add("0000:01:00.0", GU_AD104_RTX_4070, true);
 	run();
 	assert(!fake.started && logged("unlock failed (-16)"));

@@ -102,7 +102,7 @@ other boards, memory configurations and laptop models remain unverified.
 | `2757` | RTX 4090 Laptop GPU | AD103M | `ad103m_experimental`, exact | Clevo: unlocked, no throughput change; Lenovo: 2× on two cold boots | [report](docs/ada-2757-report.md), [Lenovo](https://github.com/JustAResearcher/gpu-unlock-ada/issues/4#issuecomment-6397961415) |
 | `2782` | RTX 4070 Ti | AD104 | `ad104_experimental`, exact | one card in a VFIO guest, matched; one bare-metal owner report | [report](docs/ada-2782-report.md), [#15](https://github.com/JustAResearcher/gpu-unlock-ada/pull/15) |
 | `2783` | RTX 4070 SUPER | AD104 | `ad104_experimental`, exact | one card, matched | [report](docs/ada-2783-report.md) |
-| `2786` | RTX 4070 | AD104 | `ad103_experimental`, exact | one card; three owner reports | [report](docs/ada-2786-report.md), [#11](https://github.com/JustAResearcher/gpu-unlock-ada/pull/11) |
+| `2786` | RTX 4070 | AD104 | `ad104_experimental`, exact | one card; three owner reports | [report](docs/ada-2786-report.md), [#11](https://github.com/JustAResearcher/gpu-unlock-ada/pull/11) |
 | `2803` | RTX 4060 Ti | AD106 | `ad106_experimental`, exact | one 16 GB card, matched; two more boards in #34 | [report](docs/ada-2803-report.md), [#34](https://github.com/JustAResearcher/gpu-unlock-ada/pull/34) |
 | `2805` | RTX 4060 Ti 16GB | AD106 | `ad106_experimental`, exact | one card, no matched throughput run | [report](docs/ada-2805-report.md) |
 | `28a0` | RTX 4060 Laptop GPU | AD107 | `ad107_experimental`, exact | one card, unlocked state only | [report](docs/ada-28a0-report.md) |

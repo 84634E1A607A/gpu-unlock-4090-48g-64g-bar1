@@ -29,4 +29,4 @@ class AD104BootOptionTests(unittest.TestCase):
             self.assertEqual(boot.main(), 0)
         lines = output.getvalue().splitlines()
         self.assertIn("RTX 4070 (experimental) at 0000:01:00.0 [10de:2786]:", lines)
-        self.assertIn("gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad103_experimental=1", lines)
+        self.assertIn("gpu_unlock.targets=0000:01:00.0 gpu_unlock.ad104_experimental=1", lines)
