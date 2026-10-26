@@ -50,7 +50,8 @@ for each eligible GPU it finds:
 python3 tools/print_boot_option.py
 ```
 
-Choose **one** printed line for the first cold test. To enter it manually,
+Choose **one** printed line for the first cold test. Cards that each passed
+alone can later be listed together, comma-separated. To enter it manually,
 use the card's opt-in flag from the
 [experimental target table](README.md#experimental-ada-targets). For an
 RTX 4070 Ti SUPER `10de:2705`, append these **two** options to your kernel

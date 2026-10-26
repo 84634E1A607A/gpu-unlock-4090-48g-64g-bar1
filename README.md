@@ -85,9 +85,9 @@ unlocked on one card ([2584 report](docs/ga107-2584-report.md)).
 
 ### Experimental Ada targets
 
-Each ID below needs its own opt-in flag. Rows marked *exact* also need
-`gpu_unlock.targets=` set to that card's single exact PCI address, and
-`targets=all` never selects them. All of them use the RTX 4090's pinned
+Each ID below needs its own opt-in flag. Rows marked *exact* must also be
+named by their exact PCI address in `gpu_unlock.targets=`, alone or in a
+comma-separated list, and `targets=all` never selects them. All of them use the RTX 4090's pinned
 AD102-family firmware and payload. Results come from one or a few cards per ID;
 other boards, memory configurations and laptop models remain unverified.
 `tools/print_boot_option.py` prints the exact option for any card listed here.
@@ -177,8 +177,8 @@ These PCI addresses are examples. Use the full PCI names printed by `lspci -D`.
 `all` selects every accepted unbound card, including legacy GA102/GA104 targets;
 an explicit address is useful when selecting one RTX 4090. Do not mix `all` with
 addresses. Every experimental Ada target requires its own flag from the
-[experimental target table](#experimental-ada-targets), and the exact ones a
-single exact PCI address; `all` never selects them. Invalid entries
+[experimental target table](#experimental-ada-targets), and the exact ones must
+be named by their exact PCI address; `all` never selects them. Invalid entries
 are logged and ignored.
 
 The packages support these initramfs generators:

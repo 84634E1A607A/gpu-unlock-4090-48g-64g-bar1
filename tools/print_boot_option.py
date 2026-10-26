@@ -57,7 +57,8 @@ def main() -> int:
         print(options)
         print()
     if len(found) > 1:
-        print("Choose one exact card for the first cold test; do not combine addresses.")
+        print("Choose one exact card for the first cold test; cards that each passed alone "
+              "can then be listed together, comma-separated.")
     return 0
 
 
