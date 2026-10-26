@@ -51,8 +51,20 @@ A second matched instruction benchmark found **TF32/FP32 47.49 → 94.51 TF/s**
 at approximately **754.8 TOP/s** in both states. These are register-resident
 issue rates, not application GEMM or inference speedups.
 A matched, verified E4M3 FP8/FP32 CUTLASS GEMM measured **59.326 TF/s stock →
-59.495 TF/s unlocked** on this card, a 0.3% difference. This single GEMM did
-not show a meaningful FP8 gain; other FP8 kernels remain untested.
+59.495 TF/s unlocked** on this card, a 0.3% difference. That kernel reaches only
+about 17% of this card's FP8 peak, so it cannot resolve an issue-rate change.
+Other measurements do put FP8 in the affected group: an 8192³ E4M3 GEMM on a
+Windows RTX 4080 SUPER measured **199.4 → 310.4 TF/s (+55.7%)** and
+**199.4 → 298.7 TF/s (+49.8%)** in two runs (see
+[goldlionren/gpu-unlock-4080s](https://github.com/Goldlionren/gpu-unlock-4080s);
+its author flags FP8 variance and keeps FP8 out of that repo's own pass/fail
+gate), and a register-resident E4M3 probe on the modified 48 GB RTX 4090 reads
+**603.1 TF/s** unlocked, 91% of that GPU's 660.6 TF/s nominal rate (see
+[that evidence directory](docs/evidence/rtx4090-48g-modded/README.md)). At a
+fixed power limit the GEMM-level gain stays below the issue-rate gain: an
+unlocked RTX 4090 peaked at 346 W against 313 W stock and spent both MMA and
+GEMM passes under SW Power Cap (see
+[the 610.57.04 evidence](docs/evidence/rtx4090-610.57.04/README.md)).
 This is one card; the unlock succeeded on two cold boots and two ordinary
 warm reboots, the last from a persistent EFI default. Throughput was measured
 on the first cold boot. See the [2705 canary report](docs/ada-2705-report.md)
