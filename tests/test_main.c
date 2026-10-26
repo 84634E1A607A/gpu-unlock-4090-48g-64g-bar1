@@ -287,6 +287,16 @@ int main(void)
 	assert(logged("0000:21:00.0: gpu_unlock: unlocked"));
 	puts("failure: other cards unaffected PASS");
 
+	/* A card whose PLM is already open is reported as skipped, not failed. */
+	reset("all");
+	add("0000:01:00.0", RTX_3090, false);
+	fake.fail_unlock[0] = -EALREADY;
+	fake.expected_concurrent = 1;
+	run();
+	assert(logged("0000:01:00.0: gpu_unlock: already unlocked (PLM open at entry), skipping"));
+	assert(!logged("unlock failed"));
+	puts("already unlocked: skipped, not failed PASS");
+
 	/* Without the shared firmware no card is attempted. */
 	reset("all");
 	add("0000:01:00.0", RTX_3090, false);

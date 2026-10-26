@@ -136,7 +136,9 @@ static void unlock_one(void *data, async_cookie_t cookie)
 	pci_dev_lock(pdev);
 	ret = pdev->driver ? -EBUSY : gpu_unlock_610_unlock(pdev, &shared);
 	pci_dev_unlock(pdev);
-	if (ret)
+	if (ret == -EALREADY)
+		pci_info(pdev, "gpu_unlock: already unlocked (PLM open at entry), skipping\n");
+	else if (ret)
 		pci_err(pdev, "gpu_unlock: unlock failed (%d)\n", ret);
 	else
 		pci_info(pdev, "gpu_unlock: unlocked\n");

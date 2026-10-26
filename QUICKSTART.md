@@ -99,7 +99,7 @@ before doing this.
 After the stock NVIDIA driver loads, run:
 
 ```sh
-journalctl -k -b --no-pager | grep -E 'gpu_unlock: unlocked|gpu_unlock: unlock failed|post-FLR SEC2'
+journalctl -k -b --no-pager | grep -E 'gpu_unlock: unlocked|gpu_unlock: already unlocked|gpu_unlock: unlock failed|post-FLR SEC2'
 nvidia-smi
 ```
 
