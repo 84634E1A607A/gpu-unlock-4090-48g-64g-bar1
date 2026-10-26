@@ -63,6 +63,29 @@ repository lists as untested ("other FP8 kernels remain untested"). The existing
 result on AD103 (59.3 -> 59.5 TF/s) reached about 17% of that card's FP8 peak, so it could not have
 resolved an issue-rate change either.
 
+Cross-card context (added 2026-10-26, after this directory was merged). A register-resident E4M3 probe
+running at 91% of the nominal rate is consistent with an unlocked, unsaturated FP8 issue path; it
+does not show a stock/unlocked ratio for FP8. Two other sources put FP8 in the same group as FP16
+and BF16:
+
+- An 8192³ E4M3 GEMM on a Windows RTX 4080 SUPER went 199.4 -> 310.4 TF/s (+55.7%) and
+  199.4 -> 298.7 TF/s (+49.8%) in two runs
+  ([goldlionren/gpu-unlock-4080s](https://github.com/Goldlionren/gpu-unlock-4080s)); its author notes
+  FP8 variance and excludes FP8 from that repository's own pass/fail gate.
+- A matched issue-rate pair now exists on AD103: on a Windows RTX 4070 Ti SUPER (`10de:2705`, 66 SMs)
+  the same `mma.m16n8k32` E4M3 probe measured **165.45 -> 323.95 TF/s median (1.96×)**, with the
+  FP16/FP32 control at 88.0 -> 176.6 TF/s and `f16/f16`, `s8/s32`, `dp4a`, `ffma` unchanged
+  ([A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock](https://github.com/A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock),
+  `results/fp8-baseline.txt` and `results/fp8-unlocked.txt`). That is the stock side this 4090 probe
+  lacks, on the same instruction.
+- Instruction-level gains do not survive a fixed power limit intact: an unlocked RTX 4090 on driver
+  610.57.04 peaked at 346 W against 313 W stock, throttled on SW Power Cap during both MMA and GEMM,
+  and dropped to 2505 MHz minimum clock against 2655 MHz stock
+  ([rtx4090-610.57.04](../rtx4090-610.57.04/README.md)).
+
+So the honest reading is: FP8 is not exempt from the limiter, the issue rate can reach nominal when
+unlocked, and an application-level FP8 GEMM will land between the two depending on power and clocks.
+
 ## Card safety, and the abort paths
 
 - The transaction completed with `full=1`, `valid=1` on every AD102 permission readback before the
