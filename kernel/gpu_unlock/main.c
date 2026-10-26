@@ -27,7 +27,7 @@ module_param(ad106_experimental, bool, 0444);
 MODULE_PARM_DESC(ad106_experimental, "permit experimental 10de:2803 and 10de:2805 AD106 targets with a single exact PCI address");
 static bool ad107_experimental;
 module_param(ad107_experimental, bool, 0444);
-MODULE_PARM_DESC(ad107_experimental, "permit experimental 10de:28a0, 10de:28e0 and 10de:28e1 AD107 targets with a single exact PCI address");
+MODULE_PARM_DESC(ad107_experimental, "permit experimental 10de:2882, 10de:28a0, 10de:28e0 and 10de:28e1 AD107 targets with a single exact PCI address");
 
 static bool rtx4070tis_ad102_experimental;
 module_param(rtx4070tis_ad102_experimental, bool, 0444);
@@ -82,6 +82,7 @@ static const struct experimental_id {
 	{ GU_AD104_RTX_4070, &ad104_experimental, true, "AD104" },
 	{ GU_AD106_RTX_4060_TI, &ad106_experimental, true, "AD106" },
 	{ GU_AD106_RTX_4060_TI_16GB, &ad106_experimental, true, "AD106" },
+	{ GU_AD107_RTX_4060, &ad107_experimental, true, "AD107" },
 	{ GU_AD107_RTX_4060_LAPTOP, &ad107_experimental, true, "AD107" },
 	{ GU_AD107_RTX_4060_MOBILE, &ad107_experimental, true, "AD107" },
 	{ GU_AD107_RTX_4050_MOBILE, &ad107_experimental, true, "AD107" },

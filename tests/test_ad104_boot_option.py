@@ -17,7 +17,7 @@ spec.loader.exec_module(boot)
 class AD104BootOptionTests(unittest.TestCase):
     def test_exact_id_only(self):
         output = ("0000:01:00.0 VGA [10de:2786]\n"
-                  "0000:02:00.0 VGA [10de:2882]\n"
+                  "0000:02:00.0 VGA [10de:1b80]\n"
                   "0000:11:00.0 VGA [1002:164e]")
         self.assertEqual(boot.candidates(output), [("0000:01:00.0", "2786")])
 
