@@ -58,10 +58,13 @@ Windows RTX 4080 SUPER measured **199.4 → 310.4 TF/s (+55.7%)** and
 **199.4 → 298.7 TF/s (+49.8%)** in two runs (see
 [goldlionren/gpu-unlock-4080s](https://github.com/Goldlionren/gpu-unlock-4080s);
 its author flags FP8 variance and keeps FP8 out of that repo's own pass/fail
-gate), and a register-resident E4M3 probe on the modified 48 GB RTX 4090 reads
-**603.1 TF/s** unlocked, 91% of that GPU's 660.6 TF/s nominal rate (see
-[that evidence directory](docs/evidence/rtx4090-48g-modded/README.md)). At a
-fixed power limit the GEMM-level gain stays below the issue-rate gain: an
+gate), and register-resident E4M3 probes read **603.1 TF/s** unlocked on the
+modified 48 GB RTX 4090, 91% of that GPU's 660.6 TF/s nominal rate (see
+[that evidence directory](docs/evidence/rtx4090-48g-modded/README.md)) and
+**165.45 → 323.95 TF/s (1.96×)** on a Windows RTX 4070 Ti SUPER (see
+[A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock](https://github.com/A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock)).
+So FP8 does move at the issue-rate level; a matched AD103 pair is 1.96×. At a
+fixed power limit the application GEMM stays below that: an
 unlocked RTX 4090 peaked at 346 W against 313 W stock and spent both MMA and
 GEMM passes under SW Power Cap (see
 [the 610.57.04 evidence](docs/evidence/rtx4090-610.57.04/README.md)).

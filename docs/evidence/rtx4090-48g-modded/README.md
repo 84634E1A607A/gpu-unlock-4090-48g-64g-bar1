@@ -72,6 +72,12 @@ and BF16:
   199.4 -> 298.7 TF/s (+49.8%) in two runs
   ([goldlionren/gpu-unlock-4080s](https://github.com/Goldlionren/gpu-unlock-4080s)); its author notes
   FP8 variance and excludes FP8 from that repository's own pass/fail gate.
+- A matched issue-rate pair now exists on AD103: on a Windows RTX 4070 Ti SUPER (`10de:2705`, 66 SMs)
+  the same `mma.m16n8k32` E4M3 probe measured **165.45 -> 323.95 TF/s median (1.96×)**, with the
+  FP16/FP32 control at 88.0 -> 176.6 TF/s and `f16/f16`, `s8/s32`, `dp4a`, `ffma` unchanged
+  ([A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock](https://github.com/A-XIANGQAQ/rtx4070tis-ad103-tensor-unlock),
+  `results/fp8-baseline.txt` and `results/fp8-unlocked.txt`). That is the stock side this 4090 probe
+  lacks, on the same instruction.
 - Instruction-level gains do not survive a fixed power limit intact: an unlocked RTX 4090 on driver
   610.57.04 peaked at 346 W against 313 W stock, throttled on SW Power Cap during both MMA and GEMM,
   and dropped to 2505 MHz minimum clock against 2655 MHz stock
