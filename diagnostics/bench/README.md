@@ -23,7 +23,8 @@ python3 diagnostics/bench/tensor_modes_driver_runner.py \
   --expect-power-limit 240
 ```
 
-Set `--expect-power-limit` to the cap actually used on your card. Run only
+Set `--expect-power-limit` to the cap actually used on your card. Laptops
+with Dynamic Boost report `[N/A]` for `power.limit`; pass `N/A` there. Run only
 when the GPU is free of customer and owner workloads. For a stock/unlocked
 comparison, use the **same card, cubin, power cap, driver, launch settings,
 and clock policy** in both states. Record live clocks and restore the original
