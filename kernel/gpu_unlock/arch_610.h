@@ -11,6 +11,7 @@ enum gpu_unlock_booter_arch {
  * and all use the pinned AD102-family firmware (unlock_610.c). */
 #define GU_AD102_RTX_4090_D 0x2685u
 #define GU_AD102_RTX_4070_TI_SUPER 0x2689u /* cut-down AD102, not the AD103 0x2705 */
+#define GU_AD103_RTX_4080_SUPER 0x2702u
 #define GU_AD103_RTX_4080 0x2704u
 #define GU_AD103_RTX_4070_TI_SUPER 0x2705u
 #define GU_AD103_RTX_4070 0x2709u

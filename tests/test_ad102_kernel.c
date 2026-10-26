@@ -301,6 +301,21 @@ int main(int argc, char **argv)
         puts("AD103 0x2709 profile dispatch under mocked registers PASS");
         }
         {
+        /* Same mocked dispatch for the AD103 RTX 4080 SUPER (0x2702). */
+        ad102_setup(&w);dev.device=GU_AD103_RTX_4080_SUPER;load_rom(argv[1]);
+        regs[0x1183a4/4]=0x5ff4;regs[0x625f04/4]=1;regs[0x1fa7c8/4]=0x45cb8f;
+        regs[0x1fa82c/4]=0x100000;regs[0x1fa830/4]=0x5cf3ff0;
+        regs[(GU_FUSE_SEC2_UCODE1+2*4)/4]=1;
+        fake.fwsec_wpr=1;fake.fwsec_wpr_lo=0x5ff2000;fake.fwsec_wpr_hi=0x5ff2e00;
+        struct gpu_unlock_610_shared shared2702={0};last_work=NULL;
+        assert(!gpu_unlock_610_load_shared(&dev,&shared2702));
+        ret=gpu_unlock_610_unlock(&dev,&shared2702);
+        gpu_unlock_610_release_shared(&shared2702);
+        assert(!ret && fake.starts==1 && fake.gsp_starts==1 && fake.flrs==1);
+        assert(!fake.live && !fake.fw_live && dev.refs==1);
+        puts("AD103 0x2702 profile dispatch under mocked registers PASS");
+        }
+        {
         /* Dispatch the same published AD102-family payload through the exact
          * 0x28a0 profile under mocked registers. This is not silicon proof. */
         ad102_setup(&w);dev.device=GU_AD107_RTX_4060_LAPTOP;load_rom(argv[1]);

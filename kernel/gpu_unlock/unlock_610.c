@@ -65,6 +65,7 @@ static bool ad102_family(unsigned short device)
 	case GU_AD102_RTX_4090:
 	case GU_AD102_RTX_4090_D:
 	case GU_AD102_RTX_4070_TI_SUPER:
+	case GU_AD103_RTX_4080_SUPER:
 	case GU_AD103_RTX_4080:
 	case GU_AD103_RTX_4070_TI_SUPER:
 	case GU_AD103_RTX_4070:

@@ -10,6 +10,7 @@ TARGETS = {
     "2684": ("RTX 4090", None),
     "2685": ("RTX 4090 D (experimental)", "rtx4090d_experimental"),
     "2689": ("RTX 4070 Ti SUPER AD102 (experimental)", "rtx4070tis_ad102_experimental"),
+    "2702": ("RTX 4080 SUPER (experimental)", "ad103_experimental"),
     "2704": ("RTX 4080 (experimental)", "rtx4080_experimental"),
     "2705": ("RTX 4070 Ti SUPER (experimental)", "ad103_experimental"),
     "2709": ("RTX 4070 AD103 (experimental)", "ad103_experimental"),

@@ -113,6 +113,7 @@ other boards, memory configurations and laptop models remain unverified.
 |---|---|---|---|---|---|
 | `2685` | RTX 4090 D | AD102 | `rtx4090d_experimental` | eight cards in one host | [#7](https://github.com/JustAResearcher/gpu-unlock-ada/pull/7) |
 | `2689` | RTX 4070 Ti SUPER | AD102 | `rtx4070tis_ad102_experimental`, exact | one card, 30-minute soak | [#19](https://github.com/JustAResearcher/gpu-unlock-ada/pull/19) |
+| `2702` | RTX 4080 SUPER | AD103 | `ad103_experimental`, exact | one card, matched mma and cuBLAS, alongside a 2704 in one host | [matched evidence](docs/evidence/ada2702-ada2704-matched/README.md), [#53](https://github.com/JustAResearcher/gpu-unlock-ada/issues/53) |
 | `2704` | RTX 4080 | AD103 | `rtx4080_experimental`, exact | one modified 32 GiB card; a second card in [matched evidence](docs/evidence/ada2702-ada2704-matched/README.md) | [report](docs/rtx4080-hardware-report.md) |
 | `2705` | RTX 4070 Ti SUPER | AD103 | `ad103_experimental`, exact | one card, matched stock/unlocked | [report](docs/ada-2705-report.md) |
 | `2709` | RTX 4070 | AD103 | `ad103_experimental`, exact | one card, matched | [report](docs/ada-2709-report.md) |

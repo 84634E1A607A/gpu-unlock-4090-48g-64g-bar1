@@ -18,7 +18,7 @@ MODULE_PARM_DESC(rtx4080_experimental, "permit the experimental RTX 4080 10de:27
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103_experimental, "permit experimental 10de:2705 and 10de:2709 AD103 targets when listed by exact PCI address in targets");
+MODULE_PARM_DESC(ad103_experimental, "permit experimental 10de:2702, 10de:2705 and 10de:2709 AD103 targets when listed by exact PCI address in targets");
 static bool ad104_experimental;
 module_param(ad104_experimental, bool, 0444);
 MODULE_PARM_DESC(ad104_experimental, "permit experimental 10de:2782, 10de:2783 and 10de:2786 AD104 targets when listed by exact PCI address in targets");
@@ -73,6 +73,7 @@ static const struct experimental_id {
 } experimental_ids[] = {
 	{ GU_AD102_RTX_4090_D, &rtx4090d_experimental, false, "RTX 4090 D" },
 	{ GU_AD102_RTX_4070_TI_SUPER, &rtx4070tis_ad102_experimental, true, "AD102 RTX 4070 Ti SUPER" },
+	{ GU_AD103_RTX_4080_SUPER, &ad103_experimental, true, "AD103" },
 	{ GU_AD103_RTX_4080, &rtx4080_experimental, true, "RTX 4080" },
 	{ GU_AD103_RTX_4070_TI_SUPER, &ad103_experimental, true, "AD103" },
 	{ GU_AD103_RTX_4070, &ad103_experimental, true, "AD103" },
