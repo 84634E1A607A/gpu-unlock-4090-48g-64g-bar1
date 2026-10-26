@@ -5,9 +5,10 @@ separate [single-card report](rtx4090-register-report.md). Every other Ada ID in
 the README's [experimental target table](README.md#experimental-ada-targets) is
 experimental, was tested on one or a few cards, and needs its own opt-in flag.
 Other Ada IDs remain disabled. The measured instruction-rate gain is for
-FP16, BF16 and TF32 tensor work with FP32 accumulation. INT8 and unsigned
-INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM was
-effectively unchanged (59.326 → 59.495 TF/s).
+FP16, BF16, TF32 and FP8 tensor work with FP32 accumulation. INT8 and unsigned
+INT4 did not speed up in the 2705 tests. One matched FP8/FP32 GEMM on the 2705
+was effectively unchanged (59.326 → 59.495 TF/s), but it ran far below the FP8
+peak; the README lists the FP8 issue-rate results.
 
 ## 1. Find your GPU's PCI address
 
