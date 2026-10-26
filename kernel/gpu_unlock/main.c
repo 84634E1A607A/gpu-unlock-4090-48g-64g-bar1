@@ -10,31 +10,31 @@
 
 static char *targets;
 module_param(targets, charp, 0444);
-MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported cards; most experimental Ada IDs require a single exact address");
+MODULE_PARM_DESC(targets, "\"all\" or comma-separated PCI addresses of supported cards; experimental Ada IDs must be named by exact address, never via all");
 
 static bool rtx4080_experimental;
 module_param(rtx4080_experimental, bool, 0444);
-MODULE_PARM_DESC(rtx4080_experimental, "permit the experimental RTX 4080 10de:2704 with a single exact PCI address");
+MODULE_PARM_DESC(rtx4080_experimental, "permit the experimental RTX 4080 10de:2704 when listed by exact PCI address in targets");
 
 static bool ad103_experimental;
 module_param(ad103_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103_experimental, "permit experimental 10de:2705 and 10de:2709 AD103 targets with a single exact PCI address");
+MODULE_PARM_DESC(ad103_experimental, "permit experimental 10de:2705 and 10de:2709 AD103 targets when listed by exact PCI address in targets");
 static bool ad104_experimental;
 module_param(ad104_experimental, bool, 0444);
-MODULE_PARM_DESC(ad104_experimental, "permit experimental 10de:2782, 10de:2783 and 10de:2786 AD104 targets with a single exact PCI address");
+MODULE_PARM_DESC(ad104_experimental, "permit experimental 10de:2782, 10de:2783 and 10de:2786 AD104 targets when listed by exact PCI address in targets");
 static bool ad106_experimental;
 module_param(ad106_experimental, bool, 0444);
-MODULE_PARM_DESC(ad106_experimental, "permit experimental 10de:2803 and 10de:2805 AD106 targets with a single exact PCI address");
+MODULE_PARM_DESC(ad106_experimental, "permit experimental 10de:2803 and 10de:2805 AD106 targets when listed by exact PCI address in targets");
 static bool ad107_experimental;
 module_param(ad107_experimental, bool, 0444);
-MODULE_PARM_DESC(ad107_experimental, "permit experimental 10de:2882, 10de:28a0, 10de:28e0 and 10de:28e1 AD107 targets with a single exact PCI address");
+MODULE_PARM_DESC(ad107_experimental, "permit experimental 10de:2882, 10de:28a0, 10de:28e0 and 10de:28e1 AD107 targets when listed by exact PCI address in targets");
 
 static bool rtx4070tis_ad102_experimental;
 module_param(rtx4070tis_ad102_experimental, bool, 0444);
-MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit the experimental AD102 RTX 4070 Ti SUPER 10de:2689 with a single exact PCI address");
+MODULE_PARM_DESC(rtx4070tis_ad102_experimental, "permit the experimental AD102 RTX 4070 Ti SUPER 10de:2689 when listed by exact PCI address in targets");
 static bool ad103m_experimental;
 module_param(ad103m_experimental, bool, 0444);
-MODULE_PARM_DESC(ad103m_experimental, "permit the experimental AD103M RTX 4090 Laptop GPU 10de:2757 with a single exact PCI address");
+MODULE_PARM_DESC(ad103m_experimental, "permit the experimental AD103M RTX 4090 Laptop GPU 10de:2757 when listed by exact PCI address in targets");
 static bool rtx4090d_experimental;
 module_param(rtx4090d_experimental, bool, 0444);
 MODULE_PARM_DESC(rtx4090d_experimental, "permit experimental RTX 4090 D (10de:2685) targets");
@@ -62,8 +62,8 @@ static const unsigned short supported_ids[] = {
 	0x2584,
 };
 
-/* Experimental IDs, each admitted only by its own opt-in. Exact ones also
- * need a single exact PCI address in targets and are never selected by all.
+/* Experimental IDs, each admitted only by its own opt-in. Exact ones must
+ * be named by their exact PCI address in targets, never through all.
  */
 static const struct experimental_id {
 	unsigned short device;
@@ -190,8 +190,8 @@ static int __init gpu_unlock_init(void)
 	while ((pdev = next_supported(pdev))) {
 		const struct experimental_id *id = experimental(pdev);
 
-		if (id && id->exact && (all || strcasecmp(targets, pci_name(pdev)))) {
-			pci_err(pdev, "gpu_unlock: experimental %s requires a single exact PCI target\n",
+		if (id && id->exact && (all || !listed(pci_name(pdev)))) {
+			pci_err(pdev, "gpu_unlock: experimental %s requires its exact PCI address in the list\n",
 				id->name);
 			continue;
 		}
