@@ -49,6 +49,16 @@ nvcc -O3 -arch=sm_89 -std=c++17 -o validate_gemm \
 `mma_bench.cu` accepts positive iteration and repetition counts. Repetition
 results are stored dynamically, so longer runs do not use a fixed text buffer.
 
+The `fp8/e4m3` mode drives `mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32`
+from registers, eight independent accumulator chains per warp, and counts
+16*8*32*2 = 8192 FLOP per instruction -- the same product as the 16x16x16 mma
+shapes, so the printed TF/s is directly comparable with `f16/f32`. Every input
+is 1.0 in e4m3, so each accumulator reaches 1.0 * k = 32 per instruction. The
+mode is compiled out below compute capability 8.9. It is an issue rate: an
+application FP8 GEMM will land lower when the power limit, not the issue rate,
+sets the pace (an unlocked RTX 4090 on driver 610.57.04 peaked at 346 W against
+313 W stock and throttled on SW Power Cap during both MMA and GEMM passes).
+
 The [testing guide](../../docs/testing.md) gives a stock/unlocked collection
 workflow, including the separate large cuBLAS GEMM probe. The
 [matched RTX 4090 evidence](../../docs/evidence/rtx4090-pr1-matched/README.md)
