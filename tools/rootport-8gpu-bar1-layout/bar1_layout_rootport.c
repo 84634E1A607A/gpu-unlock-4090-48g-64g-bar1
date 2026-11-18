@@ -18,12 +18,17 @@
  *
  * Safety:
  *  - duplicate (or re-spelled) bus entries are rejected before any write;
+ *  - malformed tokens are rejected: kstrtouint() parses the whole token and
+ *    values above 0xff are not valid PCI buses;
  *  - each GPU is held with pci_dev_lock() across check+commit+rollback so a
  *    driver cannot bind mid-transaction;
  *  - on failure, partial allocations are released children-first, then the
- *    saved bridge windows are reclaimed and programmed, then the BARs are
- *    restored to their saved addresses and command registers are put back;
- *    recovery success is reported per device.
+ *    saved bridge windows are reclaimed at their original addresses with
+ *    pci_claim_resource() and programmed, then the GPU's original ReBAR size
+ *    control is restored and verified while decoding is still disabled, then
+ *    the BARs are restored, then the saved command registers are put back;
+ *    recovery success is reported per device and an unrecovered device stays
+ *    decode-disabled.
  *
  * Derived from tools/server-161-bar1-layout/bar1_layout.c (same repo), which
  * targets a 4-GPU Microchip switch topology. Same ReBAR / resource
@@ -44,7 +49,7 @@ static char buses_str[] = "16,38,49,5a,98,b8,c8,d8";
 module_param_string(buses, buses_str, sizeof(buses_str), 0400);
 MODULE_PARM_DESC(buses, "comma-separated hex PCI bus numbers of the GPUs");
 
-static char *gpu_buses[MAX_GPU];
+static int gpu_bus_no[MAX_GPU];
 static int gpu_buses_n;
 
 static struct pci_dev *gpus[MAX_GPU], *ports[MAX_GPU];
@@ -111,7 +116,7 @@ static void set_bar(struct pci_dev *gpu, int bar, resource_size_t size)
 	/* 0xc: config-space BAR type bits (64-bit + prefetchable). NVIDIA's
 	 * nv_pci_validate_bars() detects 64-bit BARs via those low bits inside
 	 * pci_resource_flags(); without them it mistakes the upper half of a
-	 * 64-bit BAR for an invalid BAR and refuses to probe. */
+	 * 64-bit BAR for an invalid BAR and refuses to probe ("BAR2 is 0M"). */
 }
 
 /* Ordered rollback of a failed commit. Returns the number of GPUs whose
@@ -129,40 +134,60 @@ static int rollback(int n)
 		if (ports[i]->resource[PCI_BRIDGE_PREF_MEM_WINDOW].parent)
 			pci_release_resource(ports[i], PCI_BRIDGE_PREF_MEM_WINDOW);
 
-	/* 2) reclaim the saved bridge windows (and program the hardware) */
+	/* 2) reclaim the saved bridge windows at their original addresses */
 	for (i = 0; i < n; i++) {
 		struct resource *r = &ports[i]->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
 		struct resource *o = &orig_win[i];
+		int fail = 0;
 
 		r->start = o->start;
 		r->end = o->end;
-		r->flags = (o->flags & ~IORESOURCE_UNSET) | IORESOURCE_WINDOW;
-		if (pci_assign_resource(ports[i], PCI_BRIDGE_PREF_MEM_WINDOW)) {
+		r->flags = o->flags;
+		/* pci_claim_resource() reclaims the exact saved range; a plain
+		 * pci_assign_resource() would allocate a fresh one (and fail:
+		 * an already-assigned window has neither STARTALIGN nor
+		 * SIZEALIGN for the allocator to work with). */
+		if (pci_claim_resource(ports[i], PCI_BRIDGE_PREF_MEM_WINDOW)) {
 			pr_err("bar1_layout: rollback: window reclaim failed on %s\n",
 			       pci_name(ports[i]));
-			continue;
+			fail = 1;
+		} else {
+			program_window(ports[i]);
 		}
-		program_window(ports[i]);
 
-		/* 3) restore the GPU BARs at their saved addresses */
+		/* restore the original ReBAR size while decoding is disabled */
+		if (!fail && ctrls[i] > 0 && orig_ctrl[i]) {
+			u32 a;
+			pci_write_config_dword(gpus[i], ctrls[i], orig_ctrl[i]);
+			pci_read_config_dword(gpus[i], ctrls[i], &a);
+			if (a != orig_ctrl[i]) {
+				pr_err("bar1_layout: rollback: ReBAR restore failed on %s\n",
+				       gpu_bus_no[i]);
+				fail = 1;
+			}
+		}
+		if (fail)
+			continue;   /* keep this GPU decode-disabled */
+
+		/* 3) restore BARs at saved addresses */
 		for (bar = 1; bar <= 3; bar += 2) {
 			struct resource *g = &gpus[i]->resource[bar];
 			struct resource *s = &orig_bar[i][bar >> 1];
 
 			g->start = s->start;
 			g->end = s->end;
-			g->flags = (s->flags & ~IORESOURCE_UNSET) | IORESOURCE_WINDOW;
-			if (pci_assign_resource(gpus[i], bar)) {
-				pr_err("bar1_layout: rollback: BAR%d restore failed on %s\n",
-				       bar, gpu_buses[i]);
+			g->flags = s->flags;
+			if (pci_claim_resource(gpus[i], bar)) {
+				pr_err("bar1_layout: rollback: BAR%d reclaim failed on bus %02x\n",
+				       bar, gpu_bus_no[i]);
+				fail = 1;
 				break;
 			}
 		}
-		if (bar > 3) {
-			/* 4) put the command register back (re-enables decoding) */
-			pci_write_config_word(gpus[i], PCI_COMMAND, cmds[i]);
-			ok++;
-		}
+		if (fail)
+			continue;   /* keep decode disabled */
+		pci_write_config_word(gpus[i], PCI_COMMAND, cmds[i]);
+		ok++;
 	}
 	return ok;
 }
@@ -171,13 +196,20 @@ static int __init layout_init(void)
 {
 	int i, j, n = 0, ret = 0, recovered;
 
-	/* parse the bus list (hex tokens) */
+	/* parse the bus list (hex tokens); reject malformed/oversized values */
 	{
 		char *p = buses_str, *tok;
-		while ((tok = strsep(&p, ",")) != NULL && gpu_buses_n < MAX_GPU) {
+		while ((tok = strsep(&p, ",")) != NULL) {
+			unsigned int bus;
 			if (!*tok)
 				continue;
-			gpu_buses[gpu_buses_n++] = tok;
+			if (kstrtouint(tok, 16, &bus) || bus > 0xff) {
+				pr_err("bar1_layout: malformed bus token '%s'\n", tok);
+				return -EINVAL;
+			}
+			if (gpu_buses_n >= MAX_GPU)
+				return -E2BIG;
+			gpu_bus_no[gpu_buses_n++] = bus;
 		}
 	}
 	if (!gpu_buses_n) {
@@ -187,16 +219,15 @@ static int __init layout_init(void)
 	pr_info("bar1_layout: %s on %d GPUs (%s)\n", commit ? "COMMIT" : "dry-run",
 		gpu_buses_n, buses_str);
 
-	/* resolve every bus to (gpu, port), reject duplicates/re-spellings */
+	/* resolve every bus to (gpu, port), rejecting duplicates/re-spellings */
 	for (i = 0; i < gpu_buses_n; i++) {
-		int bus = simple_strtoul(gpu_buses[i], NULL, 16);
 		struct pci_dev *gpu, *port;
-		u16 cmd = 0xffff;
+		u16 cmd;
 		int ctrl;
 
-		gpu = pci_get_domain_bus_and_slot(0, bus, PCI_DEVFN(0, 0));
+		gpu = pci_get_domain_bus_and_slot(0, gpu_bus_no[i], PCI_DEVFN(0, 0));
 		if (!gpu || gpu->vendor != 0x10de || gpu->device != 0x2684) {
-			pr_err("bar1_layout: %s:00.0 not a 10de:2684\n", gpu_buses[i]);
+			pr_err("bar1_layout: %02x:00.0 not a 10de:2684\n", gpu_bus_no[i]);
 			if (gpu)
 				pci_dev_put(gpu);
 			ret = -ENODEV;
@@ -204,22 +235,22 @@ static int __init layout_init(void)
 		}
 		port = gpu->bus->self;
 		if (!port) {
-			pr_err("bar1_layout: %s: no parent port\n", gpu_buses[i]);
+			pr_err("bar1_layout: %02x: no parent port\n", gpu_bus_no[i]);
 			pci_dev_put(gpu);
 			ret = -ENODEV;
 			goto out;
 		}
 		for (j = 0; j < n; j++) {
 			if (gpus[j] == gpu || ports[j] == port) {
-				pr_err("bar1_layout: duplicate GPU/port via %s\n",
-				       gpu_buses[i]);
+				pr_err("bar1_layout: duplicate GPU/port via bus %02x\n",
+				       gpu_bus_no[i]);
 				pci_dev_put(gpu);
 				ret = -EINVAL;
 				goto out;
 			}
 		}
 		if (pci_read_config_word(gpu, PCI_COMMAND, &cmd) || cmd == 0xffff) {
-			pr_err("bar1_layout: %s: config read failed\n", gpu_buses[i]);
+			pr_err("bar1_layout: %02x: config read failed\n", gpu_bus_no[i]);
 			pci_dev_put(gpu);
 			ret = -EIO;
 			goto out;
@@ -231,8 +262,8 @@ static int __init layout_init(void)
 		orig_win[n] = port->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
 		if (ctrl > 0)
 			pci_read_config_dword(gpu, ctrl, &orig_ctrl[n]);
-		pr_info("bar1_layout: %s:00.0 BAR1 %pR (64GiB possible: %s) port %s window %pR\n",
-			gpu_buses[i], &gpu->resource[1],
+		pr_info("bar1_layout: %02x:00.0 BAR1 %pR (64GiB possible: %s) port %s window %pR\n",
+			gpu_bus_no[i], &gpu->resource[1],
 			(pci_rebar_get_possible_sizes(gpu, 1) & BIT(16)) ? "yes" : "NO",
 			pci_name(port), &port->resource[PCI_BRIDGE_PREF_MEM_WINDOW]);
 		n++;
@@ -244,13 +275,13 @@ static int __init layout_init(void)
 
 	for (i = 0; i < n; i++) {
 		if (ctrls[i] < 0 || !(pci_rebar_get_possible_sizes(gpus[i], 1) & BIT(16))) {
-			pr_err("bar1_layout: %s: 64 GiB not possible; unlock first\n",
-			       gpu_buses[i]);
+			pr_err("bar1_layout: %02x: 64 GiB not possible; unlock first\n",
+			       gpu_bus_no[i]);
 			ret = -EINVAL;
 			goto out;
 		}
 		if (gpus[i]->driver || (cmds[i] & PCI_COMMAND_MASTER)) {
-			pr_err("bar1_layout: %s: bound or bus-mastering\n", gpu_buses[i]);
+			pr_err("bar1_layout: %02x: bound or bus-mastering\n", gpu_bus_no[i]);
 			ret = -EBUSY;
 			goto out;
 		}
@@ -281,7 +312,7 @@ static int __init layout_init(void)
 		pci_write_config_dword(gpus[i], ctrls[i], v);
 		pci_read_config_dword(gpus[i], ctrls[i], &a);
 		if (a != v) {
-			pr_err("bar1_layout: %s: size control refused\n", gpu_buses[i]);
+			pr_err("bar1_layout: %02x: size control refused\n", gpu_bus_no[i]);
 			ret = -EIO;
 			goto fail;
 		}
@@ -300,8 +331,8 @@ static int __init layout_init(void)
 			set_bar(gpus[i], j, j == 1 ? SZ_64G : SZ_32M);
 			ret = pci_assign_resource(gpus[i], j);
 			if (ret) {
-				pr_err("bar1_layout: %s BAR%d assign failed %d\n",
-				       gpu_buses[i], j, ret);
+				pr_err("bar1_layout: %02x BAR%d assign failed %d\n",
+				       gpu_bus_no[i], j, ret);
 				goto fail;
 			}
 		}
@@ -309,8 +340,8 @@ static int __init layout_init(void)
 	for (i = 0; i < n; i++) {
 		program_window(ports[i]);
 		pci_write_config_word(gpus[i], PCI_COMMAND, cmds[i]);
-		pr_info("bar1_layout: %s:00.0 BAR1=%pR BAR3=%pR win=%pR\n",
-			gpu_buses[i], &gpus[i]->resource[1], &gpus[i]->resource[3],
+		pr_info("bar1_layout: %02x:00.0 BAR1=%pR BAR3=%pR win=%pR\n",
+			gpu_bus_no[i], &gpus[i]->resource[1], &gpus[i]->resource[3],
 			&ports[i]->resource[PCI_BRIDGE_PREF_MEM_WINDOW]);
 	}
 	pr_info("bar1_layout: committed 64 GiB BAR1 on %d GPUs\n", n);
