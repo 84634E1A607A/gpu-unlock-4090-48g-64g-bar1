@@ -93,6 +93,19 @@ static void program_window(struct pci_dev *dev)
 	pci_write_config_dword(dev, PCI_PREF_LIMIT_UPPER32, upper_32_bits(r->end));
 }
 
+/* program the GPU's config-space BAR from the (claimed) resource.
+ * pci_update_resource() is not exported to modules, so do the two dword
+ * writes directly; the BAR type nibble keeps 64-bit+prefetch (0xc). */
+static void program_bar(struct pci_dev *dev, int bar)
+{
+	struct resource *r = &dev->resource[bar];
+	int pos = PCI_BASE_ADDRESS_0 + 4 * bar;
+	u32 low = (u32)((r->start & ~0xfULL) | 0xc);
+
+	pci_write_config_dword(dev, pos, low);
+	pci_write_config_dword(dev, pos + 4, (u32)(r->start >> 32));
+}
+
 /* upstream semantics: start carries the 64 GiB ALIGNMENT hint (STARTALIGN);
  * the allocator picks the actual base inside the (1 TiB) root window. */
 static void window(struct pci_dev *dev, resource_size_t size)
@@ -183,6 +196,9 @@ static int rollback(int n)
 				fail = 1;
 				break;
 			}
+			/* the claim only restores the resource-tree reservation;
+			 * the GPU's BAR registers must be rewritten too */
+			program_bar(gpus[i], bar);
 		}
 		if (fail)
 			continue;   /* keep decode disabled */
