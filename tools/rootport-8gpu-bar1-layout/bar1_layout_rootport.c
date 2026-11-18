@@ -298,25 +298,34 @@ static int __init layout_init(void)
 		goto out;
 	}
 
-	for (i = 0; i < n; i++) {
-		if (ctrls[i] < 0 || !(pci_rebar_get_possible_sizes(gpus[i], 1) & BIT(16))) {
-			pr_err("bar1_layout: %02x: 64 GiB not possible; unlock first\n",
-			       gpu_bus_no[i]);
-			ret = -EINVAL;
-			goto out;
-		}
-		if (gpus[i]->driver || (cmds[i] & PCI_COMMAND_MASTER)) {
-			pr_err("bar1_layout: %02x: bound or bus-mastering\n", gpu_bus_no[i]);
-			ret = -EBUSY;
-			goto out;
-		}
-	}
-
 	pci_lock_rescan_remove();
 	/* hold every target GPU across check+commit+rollback: a driver cannot
 	 * bind while we hold the device lock (nvidia's probe waits on it). */
 	for (i = 0; i < n; i++)
 		pci_dev_lock(gpus[i]);
+
+	/* all state checks happen under the locks: between an unlocked check and
+	 * a later lock a driver could otherwise bind and start using the BARs */
+	for (i = 0; i < n; i++) {
+		if (ctrls[i] < 0 || !(pci_rebar_get_possible_sizes(gpus[i], 1) & BIT(16))) {
+			pr_err("bar1_layout: %02x: 64 GiB not possible; unlock first\n",
+			       gpu_bus_no[i]);
+			ret = -EINVAL;
+			goto unlock;
+		}
+		/* the command register may have changed since collection; re-read */
+		if (pci_read_config_word(gpus[i], PCI_COMMAND, &cmds[i]) ||
+		    cmds[i] == 0xffff) {
+			pr_err("bar1_layout: %02x: config read failed\n", gpu_bus_no[i]);
+			ret = -EIO;
+			goto unlock;
+		}
+		if (gpus[i]->driver || (cmds[i] & PCI_COMMAND_MASTER)) {
+			pr_err("bar1_layout: %02x: bound or bus-mastering\n", gpu_bus_no[i]);
+			ret = -EBUSY;
+			goto unlock;
+		}
+	}
 
 	/* stop the GPUs from decoding while we move their BARs */
 	for (i = 0; i < n; i++)
